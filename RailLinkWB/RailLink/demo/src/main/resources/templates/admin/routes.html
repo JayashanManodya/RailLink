@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="fragments :: head('Manage Routes - RailLink')">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Routes - RailLink</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <!-- Fallback content for static linters; replaced by Thymeleaf at runtime. -->
+  </head>
+<body>
+    <div th:replace="fragments :: navbar"></div>
+
+    <div class="page-container">
+        <div class="page-card">
+            <div class="page-header">
+                <h1 class="flex-row-center"><i class="fas fa-route"></i> Manage Routes</h1>
+                <a href="/admin/routes/add" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Add New Route
+                </a>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="route : ${routes}">
+                            <td th:text="${route.id}">1</td>
+                            <td th:text="${route.name}">Express Route</td>
+                            <td class="description-cell" th:text="${route.description}">Fast route between major cities</td>
+                            <td>
+                                <div class="form-actions">
+                                    <a th:href="@{/admin/routes/edit/{id}(id=${route.id})}" class="btn btn-secondary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <a th:href="@{/admin/routes/delete/{id}(id=${route.id})}"
+                                       class="btn btn-danger"
+                                       onclick="return confirm('Are you sure you want to delete this route?')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="fragments :: scripts"></div>
+</body>
+</html>

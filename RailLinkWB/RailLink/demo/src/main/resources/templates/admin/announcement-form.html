@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Announcement - RailLink</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #030304; color: #FFFFFF; }
+        .form-card { background-color: rgba(24, 24, 29, 0.8); border: 1px solid #18181D; }
+        .primary-btn { background-color: #BDEB29; color: #030304; transition: all .15s ease; }
+        .primary-btn:hover { background-color: #8CA43F; color: #FFFFFF; }
+        .secondary-btn { background-color: #18181D; color: #BDEB29; border: 2px solid #BDEB29; transition: all .15s ease; }
+        .secondary-btn:hover { background-color: #BDEB29; color: #030304; }
+        label { color: #BDEB29; font-weight: 600; }
+        input, textarea { background-color: #0e0e12; border: 1px solid #2a2a33; color: #FFFFFF; }
+        input:focus, textarea:focus { outline: none; border-color: #BDEB29; box-shadow: 0 0 0 3px rgba(189,235,41,0.15); }
+        .hint { color: #848484; font-size: .85rem; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+<header class="fixed top-0 left-0 w-full z-40 backdrop-blur-sm" style="background-color: rgba(24, 24, 29, 0.9);">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center py-4">
+        <a href="/" class="flex items-center space-x-2 text-xl font-bold text-white">
+            <i data-lucide="train-front" class="h-6 w-6" style="color: #BDEB29;"></i>
+            <span>RailLink</span>
+        </a>
+        <nav class="hidden md:flex space-x-6 text-white text-sm font-medium">
+            <a href="/admin/dashboard" class="hover:transition duration-150" style="color: #FFFFFF;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#FFFFFF'">Dashboard</a>
+            <a href="/admin/announcements" class="hover:transition duration-150" style="color: #BDEB29;">Announcements</a>
+            <a href="/admin/schedules" class="hover:transition duration-150" style="color: #FFFFFF;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#FFFFFF'">Schedules</a>
+        </nav>
+        <div class="flex items-center space-x-4">
+            <span class="text-white text-sm" sec:authentication="name">Admin</span>
+            <form th:action="@{/logout}" method="post" class="inline">
+                <button type="submit" class="text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 primary-btn">
+                    <i data-lucide="log-out" class="inline h-4 w-4 mr-1"></i>
+                    Logout
+                </button>
+            </form>
+        </div>
+    </div>
+</header>
+
+
+<main class="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold flex items-center gap-3">
+                <i data-lucide="megaphone" class="h-8 w-8" style="color: #BDEB29;"></i>
+                <span>Create / Edit Announcement</span>
+            </h1>
+            <p class="hint mt-2">Fill the details and save. Dates use your local time.</p>
+        </div>
+
+        <div th:if="${error}" class="mb-6 p-4 rounded-lg" style="background-color: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444;">
+            <div class="flex items-center gap-2">
+                <i data-lucide="alert-circle" class="h-5 w-5" style="color: #ef4444;"></i>
+                <span class="text-sm font-semibold" style="color: #ef4444;" th:text="${error}">Error message</span>
+            </div>
+        </div>
+
+        <div class="form-card rounded-xl shadow-2xl p-6">
+            <form th:action="@{/admin/announcements/save}" method="post" th:object="${announcement}">
+                <input type="hidden" name="id" th:value="*{id}" />
+
+                <div class="mb-6">
+                    <label for="title" class="block mb-2">Title</label>
+                    <input id="title" name="title" type="text" th:value="*{title}" required class="w-full rounded-lg px-4 py-3" placeholder="e.g. Scheduled Maintenance" />
+                    <p class="hint mt-1">Short, clear headline for the announcement.</p>
+                </div>
+
+                <div class="mb-6">
+                    <label for="message" class="block mb-2">Message</label>
+                    <textarea id="message" name="message" rows="5" th:text="*{message}" class="w-full rounded-lg px-4 py-3" placeholder="Details about the announcement..."></textarea>
+                    <p class="hint mt-1">Optional detailed description shown to users.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label for="startDate" class="block mb-2">Start Date & Time</label>
+                        <input id="startDate" name="startDate" type="datetime-local" th:value="${#temporals.format(announcement.startDate, 'yyyy-MM-dd''T''HH:mm')}" class="w-full rounded-lg px-4 py-3" />
+                        <p class="hint mt-1">When the announcement becomes visible.</p>
+                    </div>
+                    <div>
+                        <label for="endDate" class="block mb-2">End Date & Time</label>
+                        <input id="endDate" name="endDate" type="datetime-local" th:value="${#temporals.format(announcement.endDate, 'yyyy-MM-dd''T''HH:mm')}" class="w-full rounded-lg px-4 py-3" />
+                        <p class="hint mt-1">When it should stop showing.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button type="submit" class="primary-btn inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold">
+                        <i data-lucide="save" class="h-5 w-5"></i>
+                        Save Announcement
+                    </button>
+                    <a href="/admin/announcements" class="secondary-btn inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold">
+                        <i data-lucide="arrow-left" class="h-5 w-5"></i>
+                        Back to List
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<script>
+    lucide.createIcons();
+</script>
+</body>
+</html>
+

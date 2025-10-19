@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Route Form - RailLink</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #030304;
+            color: #FFFFFF;
+        }
+        
+        .route-card {
+            background-color: rgba(24, 24, 29, 0.8);
+            border: 1px solid #18181D;
+        }
+        
+        .form-input {
+            background-color: rgba(24, 24, 29, 0.8);
+            border: 1px solid #848484;
+            color: #FFFFFF;
+        }
+        
+        .form-input:focus {
+            border-color: #BDEB29;
+            box-shadow: 0 0 0 3px rgba(189, 235, 41, 0.1);
+        }
+        
+        .btn-primary {
+            background-color: #BDEB29;
+            color: #030304;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #8CA43F;
+            color: #FFFFFF;
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid #848484;
+            color: #848484;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #FFFFFF;
+            color: #FFFFFF;
+        }
+        
+        .station-item {
+            background-color: rgba(24, 24, 29, 0.6);
+            border: 1px solid #18181D;
+            transition: all 0.3s ease;
+        }
+        
+        .station-item:hover {
+            background-color: rgba(24, 24, 29, 0.8);
+            border-color: #BDEB29;
+        }
+        
+        .station-item.selected {
+            background-color: rgba(189, 235, 41, 0.1);
+            border-color: #BDEB29;
+        }
+        
+        .checkbox-custom {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #848484;
+            border-radius: 4px;
+            background-color: transparent;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .checkbox-custom:checked {
+            background-color: #BDEB29;
+            border-color: #BDEB29;
+        }
+        
+        .checkbox-custom:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #030304;
+            font-weight: bold;
+            font-size: 12px;
+        }
+    </style>
+  </head>
+<body>
+    
+    <header style="background-color: rgba(24, 24, 29, 0.9);" class="fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                
+                <a href="/" class="flex items-center space-x-2 text-xl font-bold" style="color: #FFFFFF;">
+                    <i data-lucide="train-front" class="h-6 w-6" style="color: #BDEB29;"></i>
+                    <span>RailLink</span>
+                </a>
+                
+                
+                <nav class="hidden md:flex space-x-8">
+                    <a href="/" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Home</a>
+                    <a href="/dashboard" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Dashboard</a>
+                    <a href="/search-trains" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Search Trains</a>
+                    <a href="/help" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Help</a>
+                </nav>
+                
+                
+                <div class="flex items-center space-x-4">
+                    <a href="/admin/dashboard" class="px-4 py-2 rounded-lg font-semibold transition duration-150" style="color: #BDEB29; border: 1px solid #BDEB29;" onmouseover="this.style.color='#FFFFFF'; this.style.borderColor='#FFFFFF'" onmouseout="this.style.color='#BDEB29'; this.style.borderColor='#BDEB29'">
+                        <i data-lucide="settings" class="inline h-4 w-4 mr-2"></i>
+                        Admin
+                    </a>
+                    <a href="/logout" class="px-4 py-2 rounded-lg font-semibold transition duration-150" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'; this.style.color='#FFFFFF'" onmouseout="this.style.backgroundColor='#BDEB29'; this.style.color='#030304'">
+                        <i data-lucide="log-out" class="inline h-4 w-4 mr-2"></i>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    
+    <div class="pt-20 min-h-screen" style="background-color: #030304;">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2" style="color: #FFFFFF;">
+                        <i data-lucide="route" class="inline h-8 w-8 mr-3" style="color: #BDEB29;"></i>
+                    <span th:text="${route.id == null ? 'Add New Route' : 'Edit Route'}">Route Form</span>
+                </h1>
+                    <p class="text-lg" style="color: #848484;">Create or edit train routes with station coverage</p>
+                </div>
+                <a href="/admin/routes" class="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                    <i data-lucide="arrow-left" class="h-4 w-4 mr-2"></i>
+                    Back to Routes
+                </a>
+            </div>
+
+            
+            <div class="route-card p-8 rounded-xl">
+            <form th:action="@{/admin/routes/save}" th:object="${route}" method="post">
+                <input type="hidden" th:field="*{id}" />
+                <input type="hidden" id="orderedStationIds" name="orderedStationIds" />
+                
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-6" style="color: #FFFFFF;">
+                            <i data-lucide="info" class="inline h-5 w-5 mr-2" style="color: #BDEB29;"></i>
+                            Route Information
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                    <i data-lucide="route" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                    Route Name
+                    </label>
+                                <input type="text" th:field="*{name}" class="form-input w-full px-4 py-3 rounded-lg" 
+                           placeholder="Enter route name" required />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                    <i data-lucide="hash" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                    Route Code
+                                </label>
+                                <input type="text" th:field="*{routeCode}" class="form-input w-full px-4 py-3 rounded-lg" 
+                                       placeholder="e.g., CN-001" required />
+                            </div>
+                </div>
+
+                        <div class="mt-6">
+                            <label class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                <i data-lucide="file-text" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                Description
+                    </label>
+                            <textarea th:field="*{description}" class="form-input w-full px-4 py-3 rounded-lg" 
+                                      rows="4" placeholder="Enter route description" required></textarea>
+                        </div>
+                </div>
+
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-6" style="color: #FFFFFF;">
+                            <i data-lucide="map-pin" class="inline h-5 w-5 mr-2" style="color: #BDEB29;"></i>
+                            Route Stations (Select in Order)
+                        </h3>
+                        
+                        <div class="mb-6">
+                            <p class="text-sm mb-4" style="color: #848484;">
+                                <i data-lucide="info" class="inline h-4 w-4 mr-1"></i>
+                                Select stations in the order they appear on this route. Click to add/remove stations from the route.
+                            </p>
+                            <div class="flex gap-4 mb-4">
+                                <button type="button" id="clearRouteBtn" class="btn-secondary px-4 py-2 rounded-lg font-semibold text-sm">
+                                    <i data-lucide="x" class="inline h-4 w-4 mr-2"></i>
+                                    Clear Route
+                                </button>
+                                <button type="button" id="reverseRouteBtn" class="btn-secondary px-4 py-2 rounded-lg font-semibold text-sm">
+                                    <i data-lucide="arrow-up-down" class="inline h-4 w-4 mr-2"></i>
+                                    Reverse Route
+                                </button>
+                            </div>
+                        </div>
+                        
+                        
+                        <div class="space-y-2 mb-6">
+                            <div th:each="station, iterStat : ${stations}" 
+                                 class="station-item p-4 rounded-lg cursor-pointer transition-all duration-200" 
+                                 th:data-station-id="${station.id}"
+                                 th:classappend="${selectedStationIds != null and #lists.contains(selectedStationIds, station.id.toString())} ? 'selected' : ''">
+                                <div class="flex items-center">
+                                    <div class="flex items-center mr-4">
+                                        <input type="checkbox" th:value="${station.id}" 
+                                               th:name="stationIds" 
+                                               th:id="'station_' + ${station.id}"
+                                               th:checked="${selectedStationIds != null and #lists.contains(selectedStationIds, station.id.toString())}"
+                                               class="checkbox-custom mr-3" />
+                                        <span class="route-number" style="display: none; background-color: #BDEB29; color: #030304; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px;">1</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="font-semibold" style="color: #FFFFFF;" th:text="${station.name}">Station Name</div>
+                                        <div class="text-sm" style="color: #848484;" th:text="${station.location}">Location</div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="map-pin" class="h-4 w-4" style="color: #BDEB29;"></i>
+                                        <span class="text-xs" style="color: #848484;">ID: <span th:text="${station.id}">1</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        <div class="p-4 rounded-lg" style="background-color: rgba(189, 235, 41, 0.05); border: 1px solid rgba(189, 235, 41, 0.2);">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center">
+                                    <i data-lucide="route" class="h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                    <span class="text-sm font-semibold" style="color: #FFFFFF;">Route Summary</span>
+                                </div>
+                                <span class="text-sm" style="color: #848484;">
+                                    <span id="selectedCount" class="font-semibold" style="color: #BDEB29;">0</span> stations selected
+                                </span>
+                            </div>
+                            <div id="routeOrder" class="text-sm" style="color: #848484;">
+                                <span class="text-xs" style="color: #848484;">No stations selected yet</span>
+                            </div>
+                        </div>
+                </div>
+
+                    
+                    <div class="flex gap-4">
+                        <button type="submit" class="btn-primary px-8 py-3 rounded-lg font-semibold inline-flex items-center">
+                            <i data-lucide="save" class="h-4 w-4 mr-2"></i>
+                            Save Route
+                        </button>
+                        <a href="/admin/routes" class="btn-secondary px-8 py-3 rounded-lg font-semibold inline-flex items-center">
+                            <i data-lucide="x" class="h-4 w-4 mr-2"></i>
+                            Cancel
+                        </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Ordered station selection functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const stationItems = document.querySelectorAll('.station-item');
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][name="stationIds"]');
+            const clearRouteBtn = document.getElementById('clearRouteBtn');
+            const reverseRouteBtn = document.getElementById('reverseRouteBtn');
+            const selectedCount = document.getElementById('selectedCount');
+            const routeOrder = document.getElementById('routeOrder');
+            
+            let selectedStations = [];
+            let selectionOrder = []; // Track the actual order of selection
+
+            // Update selected count and route order
+            function updateRouteDisplay() {
+                const checkedBoxes = document.querySelectorAll('input[type="checkbox"][name="stationIds"]:checked');
+                selectedCount.textContent = checkedBoxes.length;
+                
+                // Update route order display based on selection order
+                if (selectedStations.length > 0) {
+                    const routeText = selectedStations.map((station, index) => 
+                        `${index + 1}. ${station.name}`
+                    ).join(' → ');
+                    routeOrder.innerHTML = `<span style="color: #FFFFFF;">${routeText}</span>`;
+                } else {
+                    routeOrder.innerHTML = '<span class="text-xs" style="color: #848484;">No stations selected yet</span>';
+                }
+                
+                // Update route numbers
+                updateRouteNumbers();
+            }
+
+            // Update route numbers on selected stations
+            function updateRouteNumbers() {
+                stationItems.forEach(item => {
+                    const routeNumber = item.querySelector('.route-number');
+                    const checkbox = item.querySelector('input[type="checkbox"]');
+                    
+                    if (checkbox.checked) {
+                        const stationIndex = selectedStations.findIndex(station => 
+                            station.element === item
+                        );
+                        if (stationIndex !== -1) {
+                            routeNumber.textContent = stationIndex + 1;
+                            routeNumber.style.display = 'flex';
+                        }
+                    } else {
+                        routeNumber.style.display = 'none';
+                    }
+                });
+            }
+
+            // Function to handle station selection/deselection
+            function handleStationSelection(stationItem, isSelected) {
+                const checkbox = stationItem.querySelector('input[type="checkbox"]');
+                const stationId = stationItem.getAttribute('data-station-id');
+                const stationName = stationItem.querySelector('.font-semibold').textContent;
+                
+                if (isSelected) {
+                    // Add to selection order if not already selected
+                    if (!selectedStations.find(station => station.id === stationId)) {
+                        selectedStations.push({
+                            name: stationName,
+                            id: stationId,
+                            element: stationItem
+                        });
+                    }
+                } else {
+                    // Remove from selection order
+                    selectedStations = selectedStations.filter(station => station.id !== stationId);
+                }
+                
+                stationItem.classList.toggle('selected', isSelected);
+                updateRouteDisplay();
+            }
+
+            // Station item click handler
+            stationItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    if (e.target.type !== 'checkbox' && e.target.tagName !== 'BUTTON') {
+                        const checkbox = this.querySelector('input[type="checkbox"]');
+                        const isSelected = !checkbox.checked;
+                        checkbox.checked = isSelected;
+                        handleStationSelection(this, isSelected);
+                    }
+                });
+            });
+
+            // Checkbox change handler
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const stationItem = this.closest('.station-item');
+                    handleStationSelection(stationItem, this.checked);
+                });
+            });
+
+            // Clear route button
+            clearRouteBtn.addEventListener('click', function() {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                    const stationItem = checkbox.closest('.station-item');
+                    stationItem.classList.remove('selected');
+                });
+                selectedStations = [];
+                updateRouteDisplay();
+            });
+
+            // Reverse route button
+            reverseRouteBtn.addEventListener('click', function() {
+                if (selectedStations.length > 1) {
+                    // Reverse the selectedStations array
+                    selectedStations.reverse();
+                    
+                    // Update checkboxes to match the new order
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = false;
+                        const stationItem = checkbox.closest('.station-item');
+                        stationItem.classList.remove('selected');
+                    });
+                    
+                    // Re-check stations in the new order
+                    selectedStations.forEach(station => {
+                        station.element.querySelector('input[type="checkbox"]').checked = true;
+                        station.element.classList.add('selected');
+                    });
+                    
+                    updateRouteDisplay();
+                }
+            });
+
+            // Initialize display
+            updateRouteDisplay();
+
+            // Update hidden field with ordered station IDs before form submission
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(e) {
+                const orderedIds = selectedStations.map(station => station.id).join(',');
+                document.getElementById('orderedStationIds').value = orderedIds;
+            });
+        });
+    </script>
+</body>
+</html>

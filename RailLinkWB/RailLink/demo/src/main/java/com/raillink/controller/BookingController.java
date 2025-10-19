@@ -1,9 +1,7 @@
 package com.raillink.controller;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,45 +13,45 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.raillink.model.Booking;
-import com.raillink.model.Refund;
 import com.raillink.model.Schedule;
 import com.raillink.model.Station;
 import com.raillink.model.User;
 import com.raillink.service.BookingService;
-import com.raillink.service.RefundService;
+import com.raillink.service.PdfService;
 import com.raillink.service.ScheduleService;
 import com.raillink.service.StationService;
 import com.raillink.service.UserService;
-
 @Controller
 public class BookingController {
-
     @Autowired
     private ScheduleService scheduleService;
-
     @Autowired
     private StationService stationService;
-
     @Autowired
     private BookingService bookingService;
-
     @Autowired
     private UserService userService;
-
     @Autowired
-    private RefundService refundService;
-
-    // Search trains page
-    @GetMapping("/trains/search")
+    private PdfService pdfService;
+    @GetMapping("/search-trains")
     public String searchTrains(Model model) {
-        List<Station> stations = stationService.findAllStations();
-        model.addAttribute("stations", stations);
-        return "search-trains";
+        try {
+            List<Station> stations = stationService.findAllStations();
+            model.addAttribute("stations", stations);
+            return "search-trains";
+        } catch (Exception e) {
+            System.err.println("Error loading search trains page: " + e.getMessage());
+            e.printStackTrace();
+            model.addAttribute("stations", new java.util.ArrayList<Station>());
+            model.addAttribute("error", "Unable to load stations. Please try again later.");
+            return "search-trains";
+        }
     }
-
-    // Search results
     @GetMapping("/trains/search/results")
     public String searchResults(@RequestParam(required = false) String fromStation,
                                @RequestParam(required = false) String toStation,
@@ -62,6 +60,7 @@ public class BookingController {
                                @RequestParam(required = false) Long routeId,
                                @RequestParam(required = false, defaultValue = "ANY") String timeMode,
                                @RequestParam(required = false) String timeEnd,
+                               @RequestParam(required = false, defaultValue = "1") Integer passengers,
                                Model model) {
         List<Schedule> schedules;
         if (routeId != null) {
@@ -69,24 +68,20 @@ public class BookingController {
         } else {
             schedules = scheduleService.searchByStationsAndDate(fromStation, toStation, date);
         }
-        // Enhanced time filtering
         final String mode = timeMode != null ? timeMode.toUpperCase() : "ANY";
         if (!"ANY".equals(mode)) {
             try {
                 final java.time.LocalTime parsedStart = (time != null && !time.isBlank()) ? java.time.LocalTime.parse(time) : null;
                 final java.time.LocalTime parsedEnd = (timeEnd != null && !timeEnd.isBlank()) ? java.time.LocalTime.parse(timeEnd) : null;
-                // Pre-compute normalized range or around bounds
                 final java.time.LocalTime aroundMin = ("AROUND".equals(mode) && parsedStart != null) ? parsedStart.minusMinutes(30) : null;
                 final java.time.LocalTime aroundMax = ("AROUND".equals(mode) && parsedStart != null) ? parsedStart.plusMinutes(30) : null;
                 java.time.LocalTime tmpStart = parsedStart;
                 java.time.LocalTime tmpEnd = parsedEnd;
                 if ("RANGE".equals(mode) && tmpStart != null && tmpEnd != null && tmpEnd.isBefore(tmpStart)) {
-                    // swap to normalize
                     java.time.LocalTime t = tmpStart; tmpStart = tmpEnd; tmpEnd = t;
                 }
                 final java.time.LocalTime rangeStart = tmpStart;
                 final java.time.LocalTime rangeEnd = tmpEnd;
-
                 schedules = schedules.stream().filter(s -> {
                     java.time.LocalTime dep = s.getDepartureDate().toLocalTime();
                     switch (mode) {
@@ -104,7 +99,6 @@ public class BookingController {
                 }).toList();
             } catch (Exception ignored) {}
         } else if (time != null && !time.isBlank()) {
-            // Backward compatible: if time provided but no timeMode, keep EXACT behavior
             try {
                 java.time.LocalTime t = java.time.LocalTime.parse(time);
                 schedules = schedules.stream()
@@ -116,86 +110,261 @@ public class BookingController {
         model.addAttribute("schedules", schedules);
         model.addAttribute("fromStation", fromStation);
         model.addAttribute("toStation", toStation);
-        model.addAttribute("date", date);
+        java.time.LocalDate searchDate = null;
+        if (date != null && !date.isBlank()) {
+            try {
+                searchDate = java.time.LocalDate.parse(date);
+            } catch (Exception e) {
+                searchDate = null;
+            }
+        }
+        model.addAttribute("date", searchDate != null ? searchDate : date);
+        model.addAttribute("dateString", date);
         model.addAttribute("time", time);
         model.addAttribute("routeId", routeId);
         model.addAttribute("timeMode", timeMode);
         model.addAttribute("timeEnd", timeEnd);
+        model.addAttribute("passengers", passengers);
         return "search-results";
     }
-
-    // New booking form
     @GetMapping("/bookings/new/{scheduleId}")
-    public String newBooking(@PathVariable Long scheduleId, Model model) {
+    public String newBooking(@PathVariable Long scheduleId, 
+                            Model model) {
         Schedule schedule = scheduleService.findScheduleById(scheduleId)
                 .orElseThrow(() -> new RuntimeException("Schedule not found"));
+        
+        // Get train classes and capacities
+        java.util.Map<String, Integer> trainClasses = schedule.getTrain().getClasses();
+        
+        // Get schedule pricing
+        java.util.Map<String, java.math.BigDecimal> schedulePricing = schedule.getPricing();
+        
+        // Get available seats per class
+        java.util.Map<String, Integer> availablePerClass = bookingService.getAvailableSeatsPerClass(schedule);
+        
+        // Build combined class information with pricing, capacity, and availability
+        java.util.Map<String, java.util.Map<String, Object>> classInfo = new java.util.LinkedHashMap<>();
+        if (trainClasses != null && !trainClasses.isEmpty()) {
+            for (java.util.Map.Entry<String, Integer> entry : trainClasses.entrySet()) {
+                String className = entry.getKey();
+                Integer capacity = entry.getValue();
+                
+                java.util.Map<String, Object> info = new java.util.HashMap<>();
+                info.put("capacity", capacity);
+                
+                // Add available seats for this class
+                Integer available = availablePerClass.getOrDefault(className, capacity);
+                info.put("available", available);
+                
+                // Get price from schedule pricing, or use default
+                java.math.BigDecimal price;
+                if (schedulePricing != null && schedulePricing.containsKey(className)) {
+                    price = schedulePricing.get(className);
+                } else {
+                    // Default pricing based on class name
+                    switch (className.toLowerCase()) {
+                        case "first class":
+                            price = java.math.BigDecimal.valueOf(1500.00);
+                            break;
+                        case "second class":
+                            price = java.math.BigDecimal.valueOf(1000.00);
+                            break;
+                        case "third class":
+                            price = java.math.BigDecimal.valueOf(500.00);
+                            break;
+                        default:
+                            price = java.math.BigDecimal.valueOf(25.00);
+                    }
+                }
+                info.put("price", price);
+                
+                classInfo.put(className, info);
+            }
+        }
+        
         model.addAttribute("schedule", schedule);
         model.addAttribute("availableSeats", bookingService.getAvailableSeatsForSchedule(schedule));
+        model.addAttribute("classInfo", classInfo);
         return "booking-form";
     }
-
-    // Create booking
     @PostMapping("/bookings/create")
     public String createBooking(@RequestParam Long scheduleId,
-                               @RequestParam String seatNumber,
+                               @RequestParam(required = false) String seatNumber,
+                               @RequestParam(required = false) List<String> seatNumbers,
+                               @RequestParam(required = false) String ticketClass,
+                               RedirectAttributes redirectAttributes,
                                Model model) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || "anonymousUser".equals(auth.getName()) || !auth.isAuthenticated()) {
+                redirectAttributes.addFlashAttribute("error", "You must be logged in to make a booking. Please login first.");
+                return "redirect:/bookings/new/" + scheduleId;
+            }
             String username = auth.getName();
             User user = userService.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
-
             Schedule schedule = scheduleService.findScheduleById(scheduleId)
                     .orElseThrow(() -> new RuntimeException("Schedule not found"));
-
-            Booking booking = bookingService.createBooking(user, schedule, seatNumber);
-            return "redirect:/my-bookings";
+            
+            // Handle bookings - single ticket booking only
+            List<Long> bookingIds = new ArrayList<>();
+            
+            // Handle multiple seat bookings (for backward compatibility)
+            if (seatNumbers != null && !seatNumbers.isEmpty()) {
+                for (String seat : seatNumbers) {
+                    if (seat != null && !seat.trim().isEmpty()) {
+                        Booking booking = bookingService.createBooking(user, schedule, seat.trim(), ticketClass);
+                        bookingIds.add(booking.getId());
+                    }
+                }
+            } 
+            // Single seat booking
+            else if (seatNumber != null && !seatNumber.trim().isEmpty()) {
+                Booking booking = bookingService.createBooking(user, schedule, seatNumber, ticketClass);
+                bookingIds.add(booking.getId());
+            } else {
+                // Auto-assign first available seat if no seat specified
+                List<Integer> availableSeats = bookingService.getAvailableSeatsForSchedule(schedule);
+                if (availableSeats.isEmpty()) {
+                    throw new RuntimeException("No seats available for this schedule");
+                }
+                String seat = String.valueOf(availableSeats.get(0));
+                Booking booking = bookingService.createBooking(user, schedule, seat, ticketClass);
+                bookingIds.add(booking.getId());
+            }
+            
+            if (bookingIds.isEmpty()) {
+                throw new RuntimeException("No bookings were created");
+            }
+            
+            // Redirect to booking success page
+            return "redirect:/booking-success?bookingId=" + bookingIds.get(0) + "&count=1";
         } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/bookings/new/" + scheduleId;
         }
     }
-
-    // My bookings page
+    @GetMapping("/booking-success")
+    public String bookingSuccess(@RequestParam Long bookingId, 
+                                @RequestParam(required = false, defaultValue = "1") Integer count,
+                                Model model) {
+        try {
+            Booking mainBooking = bookingService.findBookingById(bookingId)
+                    .orElseThrow(() -> new RuntimeException("Booking not found"));
+            
+            // Get all bookings for this user, schedule, and class made at the same time
+            List<Booking> relatedBookings = new ArrayList<>();
+            if (count > 1) {
+                // Find bookings made around the same time (within 1 minute)
+                List<Booking> userBookings = bookingService.findBookingsByUser(mainBooking.getUser().getId());
+                java.time.LocalDateTime bookingTime = mainBooking.getBookingDate();
+                
+                for (Booking booking : userBookings) {
+                    if (booking.getSchedule().getId().equals(mainBooking.getSchedule().getId()) &&
+                        booking.getTicketClass() != null &&
+                        booking.getTicketClass().equals(mainBooking.getTicketClass()) &&
+                        "CONFIRMED".equals(booking.getStatus()) &&
+                        Math.abs(java.time.Duration.between(booking.getBookingDate(), bookingTime).toSeconds()) < 60) {
+                        relatedBookings.add(booking);
+                    }
+                }
+            } else {
+                relatedBookings.add(mainBooking);
+            }
+            
+            // Calculate total fare and collect seat numbers
+            java.math.BigDecimal totalFare = java.math.BigDecimal.ZERO;
+            List<String> seatNumbers = new ArrayList<>();
+            for (Booking booking : relatedBookings) {
+                if (booking.getFare() != null) {
+                    totalFare = totalFare.add(booking.getFare());
+                }
+                seatNumbers.add(booking.getSeatNumber());
+            }
+            
+            model.addAttribute("booking", mainBooking);
+            model.addAttribute("relatedBookings", relatedBookings);
+            model.addAttribute("ticketCount", relatedBookings.size());
+            model.addAttribute("totalFare", totalFare);
+            model.addAttribute("seatNumbers", seatNumbers);
+            model.addAttribute("ticketClass", mainBooking.getTicketClass());
+            
+            return "booking-success";
+        } catch (Exception e) {
+            model.addAttribute("error", "Booking not found");
+            return "redirect:/trains/search";
+        }
+    }
     @GetMapping("/my-bookings")
     public String myBookings(Model model) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
         User user = userService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
         List<Booking> bookings = bookingService.findBookingsByUser(user.getId());
         model.addAttribute("bookings", bookings);
         return "my-bookings";
     }
-
-    // Cancel booking
     @GetMapping("/bookings/cancel/{bookingId}")
-    public String cancelBooking(@PathVariable Long bookingId) {
-        Booking cancelled = bookingService.cancelBooking(bookingId);
+    public String cancelBooking(@PathVariable Long bookingId, RedirectAttributes redirectAttributes) {
         try {
-            java.math.BigDecimal amount = cancelled.getFare() != null ? cancelled.getFare() : new java.math.BigDecimal("0");
-            refundService.requestRefund(cancelled.getId(), amount, "Booking cancelled");
-        } catch (Exception ignored) {}
+            Booking cancelled = bookingService.cancelBooking(bookingId);
+            redirectAttributes.addFlashAttribute("success", "Booking cancelled successfully");
+        } catch (Exception e) {
+            System.err.println("Error cancelling booking: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Error cancelling booking: " + e.getMessage());
+        }
         return "redirect:/my-bookings";
     }
-
-    // Request refund (basic flow)
-    @PostMapping("/bookings/{bookingId}/refund")
-    @ResponseBody
-    public Map<String, Object> requestRefund(@PathVariable Long bookingId,
-                                             @RequestParam(required = false) String reason,
-                                             @RequestParam(required = false) String amount) {
+    @GetMapping("/bookings/edit/{bookingId}")
+    public String editBooking(@PathVariable Long bookingId, Model model) {
         try {
-            java.math.BigDecimal amt = amount != null ? new java.math.BigDecimal(amount) : new java.math.BigDecimal("0");
-            Refund refund = refundService.requestRefund(bookingId, amt, reason);
-            return Map.of("message", "Refund requested", "refundId", refund.getId());
+            Booking booking = bookingService.findBookingById(bookingId)
+                    .orElseThrow(() -> new RuntimeException("Booking not found"));
+            List<Schedule> availableSchedules = scheduleService.findSchedulesByRoute(booking.getSchedule().getRoute().getId());
+            model.addAttribute("booking", booking);
+            model.addAttribute("availableSchedules", availableSchedules);
+            return "edit-booking";
         } catch (Exception e) {
-            return Map.of("error", e.getMessage());
+            System.err.println("Error loading edit booking page: " + e.getMessage());
+            return "redirect:/my-bookings";
         }
     }
-
-    // Download ticket
+    @PostMapping("/bookings/update")
+    public String updateBooking(@RequestParam Long bookingId,
+                               @RequestParam Long scheduleId,
+                               @RequestParam String seatNumber,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            Booking booking = bookingService.findBookingById(bookingId)
+                    .orElseThrow(() -> new RuntimeException("Booking not found"));
+            Schedule newSchedule = scheduleService.findScheduleById(scheduleId)
+                    .orElseThrow(() -> new RuntimeException("Schedule not found"));
+            if (!bookingService.isSeatAvailable(newSchedule, seatNumber)) {
+                redirectAttributes.addFlashAttribute("error", "Seat " + seatNumber + " is not available for the selected schedule");
+                return "redirect:/bookings/edit/" + bookingId;
+            }
+            booking.setSchedule(newSchedule);
+            booking.setSeatNumber(seatNumber);
+            bookingService.saveBooking(booking);
+            redirectAttributes.addFlashAttribute("success", "Booking updated successfully");
+        } catch (Exception e) {
+            System.err.println("Error updating booking: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Error updating booking: " + e.getMessage());
+        }
+        return "redirect:/my-bookings";
+    }
+    @GetMapping("/bookings/delete/{bookingId}")
+    public String deleteBooking(@PathVariable Long bookingId, RedirectAttributes redirectAttributes) {
+        try {
+            bookingService.deleteBooking(bookingId);
+            redirectAttributes.addFlashAttribute("success", "Booking deleted permanently from database");
+        } catch (Exception e) {
+            System.err.println("Error deleting booking: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Error deleting booking: " + e.getMessage());
+        }
+        return "redirect:/my-bookings";
+    }
     @GetMapping("/bookings/{bookingId}/ticket")
     public String downloadTicket(@PathVariable Long bookingId, Model model) {
         Booking booking = bookingService.findBookingById(bookingId)
@@ -203,8 +372,22 @@ public class BookingController {
         model.addAttribute("booking", booking);
         return "ticket";
     }
-
-    // API endpoints for AJAX calls
+    @GetMapping("/bookings/{bookingId}/ticket/pdf")
+    public ResponseEntity<byte[]> downloadTicketPdf(@PathVariable Long bookingId) {
+        try {
+            Booking booking = bookingService.findBookingById(bookingId)
+                    .orElseThrow(() -> new RuntimeException("Booking not found"));
+            byte[] ticketPdf = pdfService.generateTicketPdf(booking);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            headers.setContentDispositionFormData("attachment", "ticket_" + bookingId + ".txt");
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(ticketPdf);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
     @GetMapping("/api/bookings/search")
     @ResponseBody
     public List<Schedule> searchSchedules(@RequestParam(required = false) String startStation,
@@ -232,7 +415,6 @@ public class BookingController {
                     }
                     final java.time.LocalTime rangeStart = tmpStart;
                     final java.time.LocalTime rangeEnd = tmpEnd;
-
                     res = res.stream().filter(s -> {
                         java.time.LocalTime dep = s.getDepartureDate().toLocalTime();
                         switch (mode) {
@@ -261,7 +443,6 @@ public class BookingController {
             return new ArrayList<>();
         }
     }
-
     @PostMapping("/api/bookings/")
     @ResponseBody
     public Map<String, Object> createBookingApi(@RequestBody Map<String, Object> request) {
@@ -270,20 +451,14 @@ public class BookingController {
             String username = auth.getName();
             User user = userService.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
-
             Long scheduleId = Long.valueOf(request.get("scheduleId").toString());
             String seatNumber = request.get("seatNumber").toString();
-
             Schedule schedule = scheduleService.findScheduleById(scheduleId)
                     .orElseThrow(() -> new RuntimeException("Schedule not found"));
-
             Booking booking = bookingService.createBooking(user, schedule, seatNumber);
-
             return Map.of("message", "Booking created successfully", "bookingId", booking.getId());
         } catch (Exception e) {
             return Map.of("error", e.getMessage());
         }
     }
-
-    // Removed duplicate API mapping for "/api/profile/my-bookings".
 } 

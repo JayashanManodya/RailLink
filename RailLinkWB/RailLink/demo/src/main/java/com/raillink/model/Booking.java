@@ -30,7 +30,7 @@ public class Booking {
     private BigDecimal fare;
     
     @Column(name = "ticket_class")
-    private String ticketClass; 
+    private String ticketClass;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

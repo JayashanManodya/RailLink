@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import com.raillink.model.Train;
 import com.raillink.repository.TrainRepository;
 @Service
-public class TrainService {
+public class TrainService { //create class
     @Autowired
     private TrainRepository trainRepository;
     public List<Train> findAllTrains() {

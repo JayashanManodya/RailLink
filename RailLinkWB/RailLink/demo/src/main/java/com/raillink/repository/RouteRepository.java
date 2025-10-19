@@ -13,5 +13,5 @@ public interface RouteRepository extends JpaRepository<Route, Long> {
     // name base la route search panna use pannum method
 
     Optional<Route> findByRouteCode(String routeCode); 
-    // routeCode base la route search panna use pannum method...
+    // routeCode base la route search panna use pannum method..
 }

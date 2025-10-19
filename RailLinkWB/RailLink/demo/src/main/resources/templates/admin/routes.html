@@ -1,59 +1,197 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="fragments :: head('Manage Routes - RailLink')">
+<head>
+    <title>Manage Routes - RailLink</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Routes - RailLink</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-    <link rel="stylesheet" th:href="@{/css/style.css}"/>
-    <!-- Fallback content for static linters; replaced by Thymeleaf at runtime. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #030304;
+            color: #FFFFFF;
+        }
+        
+        .admin-card {
+            background-color: rgba(24, 24, 29, 0.8);
+            border: 1px solid #18181D;
+        }
+        
+        .btn-primary {
+            background-color: #BDEB29;
+            color: #030304;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #8CA43F;
+            color: #FFFFFF;
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid #848484;
+            color: #848484;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #FFFFFF;
+            color: #FFFFFF;
+        }
+        
+        .btn-danger {
+            background-color: #ef4444;
+            color: #FFFFFF;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+        
+        .table-row {
+            background-color: rgba(24, 24, 29, 0.6);
+            border: 1px solid #18181D;
+            transition: all 0.3s ease;
+        }
+        
+        .table-row:hover {
+            background-color: rgba(24, 24, 29, 0.8);
+            border-color: #BDEB29;
+        }
+    </style>
   </head>
 <body>
-    <div th:replace="fragments :: navbar"></div>
-
-    <div class="page-container">
-        <div class="page-card">
-            <div class="page-header">
-                <h1 class="flex-row-center"><i class="fas fa-route"></i> Manage Routes</h1>
-                <a href="/admin/routes/add" class="btn btn-success">
-                    <i class="fas fa-plus"></i> Add New Route
+    
+    <header style="background-color: rgba(24, 24, 29, 0.9);" class="fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                
+                <a href="/" class="flex items-center space-x-2 text-xl font-bold" style="color: #FFFFFF;">
+                    <i data-lucide="train-front" class="h-6 w-6" style="color: #BDEB29;"></i>
+                    <span>RailLink</span>
                 </a>
+                
+                
+                <nav class="hidden md:flex space-x-8">
+                    <a href="/" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Home</a>
+                    <a href="/dashboard" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Dashboard</a>
+                    <a href="/search-trains" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Search Trains</a>
+                    <a href="/help" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Help</a>
+                </nav>
+                
+                
+                <div class="flex items-center space-x-4">
+                    <a href="/admin/dashboard" class="px-4 py-2 rounded-lg font-semibold transition duration-150" style="color: #BDEB29; border: 1px solid #BDEB29;" onmouseover="this.style.color='#FFFFFF'; this.style.borderColor='#FFFFFF'" onmouseout="this.style.color='#BDEB29'; this.style.borderColor='#BDEB29'">
+                        <i data-lucide="settings" class="inline h-4 w-4 mr-2"></i>
+                        Admin
+                    </a>
+                    <a href="/logout" class="px-4 py-2 rounded-lg font-semibold transition duration-150" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'; this.style.color='#FFFFFF'" onmouseout="this.style.backgroundColor='#BDEB29'; this.style.color='#030304'">
+                        <i data-lucide="log-out" class="inline h-4 w-4 mr-2"></i>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    
+    <div class="pt-20 min-h-screen" style="background-color: #030304;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2" style="color: #FFFFFF;">
+                        <i data-lucide="route" class="inline h-8 w-8 mr-3" style="color: #BDEB29;"></i>
+                        Manage Routes
+                    </h1>
+                    <p class="text-lg" style="color: #848484;">Create and manage train routes</p>
+                </div>
+                <div class="flex gap-4">
+                    <a href="/admin/dashboard" class="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                        <i data-lucide="arrow-left" class="h-4 w-4 mr-2"></i>
+                        Back to Dashboard
+                    </a>
+                    <a href="/admin/routes/add" class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                        <i data-lucide="plus" class="h-4 w-4 mr-2"></i>
+                        Add New Route
+                    </a>
+                </div>
             </div>
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Actions</th>
+            
+            <div class="admin-card rounded-xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead style="background-color: rgba(24, 24, 29, 0.9);">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-sm font-semibold" style="color: #FFFFFF;">ID</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold" style="color: #FFFFFF;">Name</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold" style="color: #FFFFFF;">Route Code</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold" style="color: #FFFFFF;">Description</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold" style="color: #FFFFFF;">Stations</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold" style="color: #FFFFFF;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="route : ${routes}">
-                            <td th:text="${route.id}">1</td>
-                            <td th:text="${route.name}">Express Route</td>
-                            <td class="description-cell" th:text="${route.description}">Fast route between major cities</td>
-                            <td>
-                                <div class="form-actions">
-                                    <a th:href="@{/admin/routes/edit/{id}(id=${route.id})}" class="btn btn-secondary">
-                                        <i class="fas fa-edit"></i> Edit
+                            <tr th:each="route : ${routes}" class="table-row">
+                                <td class="px-6 py-4 text-sm" style="color: #FFFFFF;" th:text="${route.id}">1</td>
+                                <td class="px-6 py-4 text-sm font-medium" style="color: #FFFFFF;" th:text="${route.name}">Express Route</td>
+                                <td class="px-6 py-4 text-sm font-medium" style="color: #BDEB29;" th:text="${route.routeCode}">CN-001</td>
+                                <td class="px-6 py-4 text-sm" style="color: #848484;" th:text="${route.description}">Fast route between major cities</td>
+                                <td class="px-6 py-4">
+                                    <div th:if="${route.path != null and !route.path.isEmpty()}" class="space-y-1">
+                                        <div th:each="stationId, iterStat : ${#strings.arraySplit(route.path, ',')}" 
+                                             class="flex items-center">
+                                            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-2" 
+                                                  style="background-color: #BDEB29; color: #030304;" 
+                                                  th:text="${iterStat.index + 1}">1</span>
+                                            <span class="text-sm font-medium" style="color: #FFFFFF;">
+                                                Station <span th:text="${stationId}">1</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <span th:if="${route.path == null or route.path.isEmpty()}" class="text-sm" style="color: #848484;">No stations selected</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex gap-2">
+                                        <a th:href="@{/admin/routes/edit/{id}(id=${route.id})}" class="btn-secondary px-3 py-2 rounded-lg text-sm font-semibold inline-flex items-center">
+                                            <i data-lucide="edit" class="h-3 w-3 mr-1"></i>
+                                            Edit
                                     </a>
                                     <a th:href="@{/admin/routes/delete/{id}(id=${route.id})}"
-                                       class="btn btn-danger"
+                                           class="btn-danger px-3 py-2 rounded-lg text-sm font-semibold inline-flex items-center"
                                        onclick="return confirm('Are you sure you want to delete this route?')">
-                                        <i class="fas fa-trash"></i> Delete
+                                            <i data-lucide="trash-2" class="h-3 w-3 mr-1"></i>
+                                            Delete
                                     </a>
                                 </div>
                             </td>
                         </tr>
                     </tbody>
                 </table>
+                </div>
+            </div>
+
+            
+            <div th:if="${routes == null or #lists.isEmpty(routes)}" class="admin-card p-12 rounded-xl text-center">
+                <i data-lucide="route" class="h-16 w-16 mx-auto mb-4" style="color: #848484; opacity: 0.5;"></i>
+                <h3 class="text-xl font-semibold mb-2" style="color: #FFFFFF;">No Routes Found</h3>
+                <p class="mb-6" style="color: #848484;">Get started by creating your first route.</p>
+                <a href="/admin/routes/add" class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                    <i data-lucide="plus" class="h-4 w-4 mr-2"></i>
+                    Create First Route
+                </a>
             </div>
         </div>
     </div>
 
-    <div th:replace="fragments :: scripts"></div>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
 </body>
 </html>

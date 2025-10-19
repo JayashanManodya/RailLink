@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Edit Booking - RailLink Admin</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #030304;
+            color: #FFFFFF;
+        }
+        
+        .admin-card {
+            background-color: rgba(24, 24, 29, 0.8);
+            border: 1px solid #18181D;
+            transition: all 0.3s ease;
+        }
+        
+        .admin-card:hover {
+            background-color: rgba(24, 24, 29, 0.9);
+            border-color: #BDEB29;
+        }
+        
+        .btn-primary {
+            background-color: #BDEB29;
+            color: #030304;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #8CA43F;
+            color: #FFFFFF;
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid #848484;
+            color: #848484;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #FFFFFF;
+            color: #FFFFFF;
+        }
+        
+        .form-input {
+            background-color: rgba(24, 24, 29, 0.8);
+            border: 1px solid #18181D;
+            color: #FFFFFF;
+        }
+        
+        .form-input:focus {
+            border-color: #BDEB29;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    
+    <header style="background-color: rgba(24, 24, 29, 0.9);" class="fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                
+                <a href="/" class="flex items-center space-x-2 text-xl font-bold" style="color: #FFFFFF;">
+                    <i data-lucide="train-front" class="h-6 w-6" style="color: #BDEB29;"></i>
+                    <span>RailLink</span>
+                </a>
+                
+                
+                <nav class="hidden md:flex space-x-8">
+                    <a href="/" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Home</a>
+                    <a href="/dashboard" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Dashboard</a>
+                    <a href="/search-trains" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Search Trains</a>
+                    <a href="/help" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Help</a>
+                </nav>
+                
+                
+                <div class="flex items-center space-x-4">
+                    <a href="/admin/dashboard" class="px-4 py-2 rounded-lg font-semibold transition duration-150" style="color: #BDEB29; border: 1px solid #BDEB29;" onmouseover="this.style.color='#FFFFFF'; this.style.borderColor='#FFFFFF'" onmouseout="this.style.color='#BDEB29'; this.style.borderColor='#BDEB29'">
+                        <i data-lucide="shield" class="inline h-4 w-4 mr-2"></i>
+                        Admin Dashboard
+                    </a>
+                    <a href="/logout" class="px-4 py-2 rounded-lg font-semibold transition duration-150" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'; this.style.color='#FFFFFF'" onmouseout="this.style.backgroundColor='#BDEB29'; this.style.color='#030304'">
+                        <i data-lucide="log-out" class="inline h-4 w-4 mr-2"></i>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    
+    <div class="pt-20 min-h-screen" style="background-color: #030304;">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-4xl font-bold mb-2" style="color: #FFFFFF;">Edit Booking</h1>
+                    <p class="text-lg" style="color: #848484;">Modify booking details</p>
+                </div>
+                <a href="/admin/bookings" class="btn-secondary inline-flex items-center px-4 py-2 rounded-lg font-semibold">
+                    <i data-lucide="arrow-left" class="h-4 w-4 mr-2"></i>
+                    Back to Bookings
+                </a>
+            </div>
+
+            
+            <div th:if="${success}" class="mb-6 p-4 rounded-lg" style="background-color: #10b981; color: #FFFFFF;">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="check-circle" class="h-5 w-5"></i>
+                    <span th:text="${success}"></span>
+                </div>
+            </div>
+            <div th:if="${error}" class="mb-6 p-4 rounded-lg" style="background-color: #ef4444; color: #FFFFFF;">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="alert-circle" class="h-5 w-5"></i>
+                    <span th:text="${error}"></span>
+                </div>
+            </div>
+
+            
+            <div class="admin-card rounded-xl p-6 mb-8">
+                <h2 class="text-2xl font-semibold mb-6" style="color: #FFFFFF;">Booking Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-2" style="color: #BDEB29;">Booking ID</label>
+                        <div class="p-3 rounded-lg form-input">
+                            <span class="font-mono">#<span th:text="${booking.id}">123</span></span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2" style="color: #BDEB29;">Passenger</label>
+                        <div class="p-3 rounded-lg form-input">
+                            <span th:text="${booking.user.username}">john_doe</span>
+                            <div class="text-sm" style="color: #848484;" th:text="${booking.user.email}">john@example.com</div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2" style="color: #BDEB29;">Current Route</label>
+                        <div class="p-3 rounded-lg form-input">
+                            <span th:text="${booking.schedule.route.name}">Colombo to Kandy</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2" style="color: #BDEB29;">Current Status</label>
+                        <div class="p-3 rounded-lg form-input">
+                            <span th:text="${booking.status}">CONFIRMED</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="admin-card rounded-xl p-6">
+                <h2 class="text-2xl font-semibold mb-6" style="color: #FFFFFF;">Edit Booking Details</h2>
+                
+                <form th:action="@{/admin/bookings/update}" method="post" class="space-y-6">
+                    <input type="hidden" name="bookingId" th:value="${booking.id}">
+                    
+                    
+                    <div>
+                        <label for="scheduleId" class="block text-sm font-medium mb-2" style="color: #BDEB29;">Select Schedule</label>
+                        <select name="scheduleId" id="scheduleId" class="w-full p-3 rounded-lg form-input" required>
+                            <option value="">Choose a schedule...</option>
+                            <option th:each="schedule : ${availableSchedules}" 
+                                    th:value="${schedule.id}" 
+                                    th:text="${schedule.scheduleName + ' - ' + #temporals.format(schedule.departureDate, 'MMM dd, yyyy HH:mm')}"
+                                    th:selected="${schedule.id == booking.schedule.id}">
+                                Express Train - Dec 15, 2024 08:30
+                            </option>
+                        </select>
+                    </div>
+                    
+                    
+                    <div>
+                        <label for="seatNumber" class="block text-sm font-medium mb-2" style="color: #BDEB29;">Seat Number</label>
+                        <input type="text" name="seatNumber" id="seatNumber" 
+                               th:value="${booking.seatNumber}"
+                               class="w-full p-3 rounded-lg form-input" 
+                               placeholder="Enter seat number (e.g., A12)" 
+                               required>
+                    </div>
+                    
+                    
+                    <div>
+                        <label for="status" class="block text-sm font-medium mb-2" style="color: #BDEB29;">Booking Status</label>
+                        <select name="status" id="status" class="w-full p-3 rounded-lg form-input">
+                            <option value="">Keep current status</option>
+                            <option value="CONFIRMED" th:selected="${booking.status == 'CONFIRMED'}">Confirmed</option>
+                            <option value="PENDING" th:selected="${booking.status == 'PENDING'}">Pending</option>
+                            <option value="CANCELLED" th:selected="${booking.status == 'CANCELLED'}">Cancelled</option>
+                        </select>
+                    </div>
+                    
+                    
+                    <div class="flex justify-end space-x-4 pt-6">
+                        <a href="/admin/bookings" class="btn-secondary inline-flex items-center px-6 py-3 rounded-lg font-semibold">
+                            <i data-lucide="x" class="h-4 w-4 mr-2"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn-primary inline-flex items-center px-6 py-3 rounded-lg font-semibold">
+                            <i data-lucide="save" class="h-4 w-4 mr-2"></i>
+                            Update Booking
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+

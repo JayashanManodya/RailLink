@@ -46,7 +46,7 @@ public class RouteService {
         Route route = routeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Route not found")); // id kidaikala na error throw pannum
 
-        // old route details ah new values la update pannudhu
+        // old route details ah new values la update pannudhu..
         route.setName(routeDetails.getName());
         route.setDescription(routeDetails.getDescription());
         route.setRouteCode(routeDetails.getRouteCode());

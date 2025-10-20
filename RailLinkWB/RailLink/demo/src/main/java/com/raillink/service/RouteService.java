@@ -1,11 +1,11 @@
-package com.raillink.service; // package name (service layer la iruku)
+package com.raillink.service; 
 
-import java.util.List; // List use panna import
-import java.util.Optional; // null avoid panna Optional use panna
-import org.springframework.beans.factory.annotation.Autowired; // dependency inject panna use aagum
-import org.springframework.stereotype.Service; // service class nu mark panna
-import com.raillink.model.Route; // Route model import pannirukom
-import com.raillink.repository.RouteRepository; // repository import pannirukom
+import java.util.List; 
+import java.util.Optional; 
+import org.springframework.beans.factory.annotation.Autowired; 
+import org.springframework.stereotype.Service; 
+import com.raillink.model.Route;
+import com.raillink.repository.RouteRepository; 
 
 @Service // indha class service layer nu indicate pannudhu
 public class RouteService {
@@ -42,9 +42,9 @@ public class RouteService {
     }
 
     public Route updateRoute(Long id, Route routeDetails) {
-        // existing route update panna use pannum
+        // existing route update panna 
         Route route = routeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Route not found")); // id kidaikala na error throw pannum
+                .orElseThrow(() -> new RuntimeException("Route not found")); 
 
         // old route details ah new values la update pannudhu..
         route.setName(routeDetails.getName());
@@ -52,7 +52,7 @@ public class RouteService {
         route.setRouteCode(routeDetails.getRouteCode());
         route.setPath(routeDetails.getPath());
 
-        return routeRepository.save(route); // updated route save pannudhu
+        return routeRepository.save(route); 
     }
 
     public void deleteRoute(Long id) {
@@ -63,24 +63,24 @@ public class RouteService {
     public String convertStationIdsToPath(List<Long> stationIds) {
         // station IDs list ah string path (comma separated) ah convert pannudhu
         if (stationIds == null || stationIds.isEmpty()) {
-            return ""; // empty list na empty string return pannum
+            return ""; 
         }
         return stationIds.stream()
-                .map(String::valueOf) // number ah string ah maathudhu
-                .reduce((a, b) -> a + "," + b) // comma vachu join pannudhu
-                .orElse(""); // result illa na empty string return pannudhu
+                .map(String::valueOf) 
+                .reduce((a, b) -> a + "," + b)
+                .orElse(""); 
     }
 
     public List<Long> convertPathToStationIds(String path) {
         // path string ah station ID list ah convert pannudhu
         if (path == null || path.trim().isEmpty()) {
-            return List.of(); // empty path na empty list return pannudhu
+            return List.of(); 
         }
         return List.of(path.split(",")) // comma la split pannudhu
                 .stream()
-                .map(String::trim) // space remove pannudhu
-                .filter(s -> !s.isEmpty()) // empty values filter pannudhu
-                .map(Long::valueOf) // string ah number ah maathudhu
-                .toList(); // list ah collect pannudhu
+                .map(String::trim) 
+                .filter(s -> !s.isEmpty()) 
+                .map(Long::valueOf) 
+                .toList(); 
     }
 }

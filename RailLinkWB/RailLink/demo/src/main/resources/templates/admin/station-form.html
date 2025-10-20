@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">                                                                                                                                                                                                                                                                                                              qqwq    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Station Form - RailLink</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles based on the index design system */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #030304; /* Deep black background */
+            color: #FFFFFF; /* White text */
+        }
+        
+        .form-control {
+            background-color: rgba(24, 24, 29, 0.6);
+            border: 2px solid #18181D;
+            color: #FFFFFF;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #BDEB29;
+            background-color: rgba(24, 24, 29, 0.8);
+            box-shadow: 0 0 0 3px rgba(189, 235, 41, 0.1);
+        }
+        
+        .form-control::placeholder {
+            color: #848484;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    
+    <header class="fixed top-0 left-0 w-full z-40 backdrop-blur-sm" style="background-color: rgba(24, 24, 29, 0.9);">   
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center py-4">
+            
+            <a href="/" class="flex items-center space-x-2 text-xl font-bold text-white">
+                <i data-lucide="train-front" class="h-6 w-6" style="color: #BDEB29;"></i>
+                <span>RailLink</span>
+            </a>
+            
+            
+            <nav class="hidden md:flex space-x-6 text-white text-sm font-medium">
+                <a href="/" class="hover:transition duration-150" style="color: #FFFFFF;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#FFFFFF'">Home</a>
+                <a href="/admin/dashboard" class="hover:transition duration-150" style="color: #FFFFFF;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#FFFFFF'">Dashboard</a>
+                <a href="/admin/stations" class="hover:transition duration-150" style="color: #BDEB29;">Stations</a>
+                <a href="/admin/trains" class="hover:transition duration-150" style="color: #FFFFFF;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#FFFFFF'">Trains</a>
+                <a href="/admin/routes" class="hover:transition duration-150" style="color: #FFFFFF;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#FFFFFF'">Routes</a>
+            </nav>
+
+            
+            <div class="flex items-center space-x-4">
+                <span class="text-white text-sm" sec:authentication="name">Admin</span>
+                <form th:action="@{/logout}" method="post" class="inline">
+                    <button type="submit" class="text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'" onmouseout="this.style.backgroundColor='#BDEB29'">
+                        <i data-lucide="log-out" class="inline h-4 w-4 mr-1"></i>
+                        Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    
+    <div class="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-2xl mx-auto">
+            
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-4xl font-bold flex items-center gap-3" style="color: #FFFFFF;">
+                        <i data-lucide="map-pin-plus" class="h-10 w-10" style="color: #BDEB29;"></i>
+                        <span th:text="${station.id == null ? 'Add New Station' : 'Edit Station'}">Station Form</span>
+                    </h1>
+                    <p class="text-lg mt-2" style="color: #848484;">Enter the station details below</p>
+                </div>
+                <a href="/admin/stations" class="inline-flex items-center gap-2 text-sm font-semibold py-2 px-5 rounded-lg transition duration-150" style="background-color: #18181D; color: #BDEB29; border: 2px solid #BDEB29;" onmouseover="this.style.backgroundColor='#BDEB29'; this.style.color='#030304'" onmouseout="this.style.backgroundColor='#18181D'; this.style.color='#BDEB29'">
+                    <i data-lucide="arrow-left" class="h-4 w-4"></i>
+                    Back
+                </a>
+            </div>
+
+            
+            <div class="rounded-xl shadow-2xl p-8" style="background-color: rgba(24, 24, 29, 0.8);">
+                <form th:action="@{/admin/stations/save}" th:object="${station}" method="post" class="space-y-6">
+                    <input type="hidden" th:field="*{id}" />
+                    
+                    
+                    <div>
+                        <label for="name" class="flex items-center gap-2 text-sm font-semibold mb-2" style="color: #BDEB29;">
+                            <i data-lucide="map-pin" class="h-4 w-4"></i>
+                            Station Name
+                        </label>
+                        <input type="text" id="name" th:field="*{name}" 
+                               class="form-control w-full px-4 py-3 rounded-lg" 
+                               placeholder="Enter station name (e.g., Colombo Fort, Kandy)" required />
+                        <p class="text-xs mt-1" style="color: #848484;">The official name of the railway station</p>
+                    </div>
+
+                    
+                    <div>
+                        <label for="location" class="flex items-center gap-2 text-sm font-semibold mb-2" style="color: #BDEB29;">
+                            <i data-lucide="map" class="h-4 w-4"></i>
+                            Location
+                        </label>
+                        <input type="text" id="location" th:field="*{location}" 
+                               class="form-control w-full px-4 py-3 rounded-lg" 
+                               placeholder="Enter location (e.g., Colombo, Central Province)" required />
+                        <p class="text-xs mt-1" style="color: #848484;">City or region where the station is located</p>
+                    </div>
+
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 mt-8 pt-6 border-t" style="border-color: #18181D;">
+                        <button type="submit" class="flex items-center justify-center gap-2 text-sm font-semibold py-3 px-6 rounded-lg shadow-md transition duration-150" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'" onmouseout="this.style.backgroundColor='#BDEB29'">
+                            <i data-lucide="save" class="h-5 w-5"></i>
+                            Save Station
+                        </button>
+                        <a href="/admin/stations" class="flex items-center justify-center gap-2 text-sm font-semibold py-3 px-6 rounded-lg transition duration-150" style="background-color: #18181D; color: #FFFFFF; border: 2px solid #848484;" onmouseover="this.style.borderColor='#FFFFFF'" onmouseout="this.style.borderColor='#848484'">
+                            <i data-lucide="x" class="h-5 w-5"></i>
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+
+                
+                <div class="mt-8 p-4 rounded-lg" style="background-color: rgba(189, 235, 41, 0.1); border-left: 4px solid #BDEB29;">
+                    <div class="flex items-start gap-3">
+                        <i data-lucide="info" class="h-5 w-5 mt-0.5" style="color: #BDEB29;"></i>
+                        <div>
+                            <h3 class="font-semibold mb-1" style="color: #BDEB29;">Station Information</h3>
+                            <p class="text-sm" style="color: #848484;">
+                                Stations are the key points in your railway network. Make sure to use consistent naming 
+                                conventions and accurate location information for better route planning.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <footer style="background-color: #030304; color: #FFFFFF; border-top: 1px solid #18181D;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center space-x-2 text-lg font-bold">
+                    <i data-lucide="train-front" class="h-5 w-5" style="color: #BDEB29;"></i>
+                    <span>RailLink</span>
+                </div>
+                <p class="text-sm" style="color: #848484;">©2025 RailLink. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>

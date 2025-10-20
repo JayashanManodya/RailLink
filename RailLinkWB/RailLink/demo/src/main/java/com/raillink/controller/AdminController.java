@@ -117,35 +117,73 @@ public class AdminController {
                 .orElseThrow(() -> new RuntimeException("Route not found"));
         return ResponseEntity.ok(route);
     }
+    // Get all schedules
     @GetMapping("/schedules")
     public ResponseEntity<List<Schedule>> getAllSchedules() {
+        // Fetch all schedules from scheduleService and return with HTTP 200 OK
         return ResponseEntity.ok(scheduleService.findAllSchedules());
     }
+
+    // Create a new schedule
     @PostMapping("/schedules")
     public ResponseEntity<Schedule> createSchedule(@RequestBody Map<String, Object> request) {
+        // Parse departure date from request body
         LocalDateTime departureDate = LocalDateTime.parse((String) request.get("departureDate"));
+
+        // Parse arrival date from request body
         LocalDateTime arrivalDate = LocalDateTime.parse((String) request.get("arrivalDate"));
+
+        // Get status value from request body
         String status = (String) request.get("status");
+
+        // Get trainId from request body and convert to Long
         Long trainId = Long.valueOf((Integer) request.get("trainId"));
+
+        // Get routeId from request body and convert to Long
         Long routeId = Long.valueOf((Integer) request.get("routeId"));
+
+        // Fetch Train object by ID or throw exception if not found
         Train train = trainService.findTrainById(trainId).orElseThrow();
+
+        // Fetch Route object by ID or throw exception if not found
         Route route = routeService.findRouteById(routeId).orElseThrow();
+
+        // Create new schedule using the scheduleService
         Schedule schedule = scheduleService.createSchedule(departureDate, arrivalDate, status, train, route);
+
+        // Broadcast the newly created schedule to subscribers (real-time update)
         scheduleBroadcaster.broadcastScheduleCreated(schedule);
+
+        // Return the created schedule with HTTP 200 OK
         return ResponseEntity.ok(schedule);
     }
+
+    // Update an existing schedule by ID
     @PutMapping("/schedules/{id}")
     public ResponseEntity<Schedule> updateSchedule(@PathVariable Long id, @RequestBody Schedule schedule) {
+        // Update the schedule using scheduleService
         Schedule updatedSchedule = scheduleService.updateSchedule(id, schedule);
+
+        // Broadcast the updated schedule to subscribers (real-time update)
         scheduleBroadcaster.broadcastScheduleUpdate(updatedSchedule);
+
+        // Return the updated schedule with HTTP 200 OK
         return ResponseEntity.ok(updatedSchedule);
     }
+
+    // Delete a schedule by ID
     @DeleteMapping("/schedules/{id}")
     public ResponseEntity<?> deleteSchedule(@PathVariable Long id) {
+        // Delete the schedule using scheduleService
         scheduleService.deleteSchedule(id);
+
+        // Broadcast the deleted schedule ID to subscribers (real-time update)
         scheduleBroadcaster.broadcastScheduleDeleted(id);
+
+        // Return HTTP 200 OK with no content
         return ResponseEntity.ok().build();
     }
+
     @PostMapping("/refunds/request")
     public ResponseEntity<Refund> requestRefund(@RequestBody Map<String, Object> request) {
         Long bookingId = Long.valueOf(request.get("bookingId").toString());

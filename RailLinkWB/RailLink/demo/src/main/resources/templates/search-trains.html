@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Search Trains - RailLink</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #030304;
+            color: #FFFFFF;
+        }
+        
+        .search-card {
+            background-color: rgba(24, 24, 29, 0.8);
+            border: 1px solid #18181D;
+        }
+        
+        .form-input {
+            background-color: rgba(24, 24, 29, 0.8);
+            border: 1px solid #848484;
+            color: #FFFFFF;
+        }
+        
+        .form-input:focus {
+            border-color: #BDEB29;
+            box-shadow: 0 0 0 3px rgba(189, 235, 41, 0.1);
+        }
+        
+        .btn-primary {
+            background-color: #BDEB29;
+            color: #030304;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #8CA43F;
+            color: #FFFFFF;
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid #848484;
+            color: #848484;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #FFFFFF;
+            color: #FFFFFF;
+        }
+    </style>
+</head>
+<body>
+    
+    <header style="background-color: rgba(24, 24, 29, 0.9);" class="fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                
+                <a href="/" class="flex items-center space-x-2 text-xl font-bold" style="color: #FFFFFF;">
+                    <i data-lucide="train-front" class="h-6 w-6" style="color: #BDEB29;"></i>
+                    <span>RailLink</span>
+                </a>
+                
+                
+                <nav class="hidden md:flex space-x-8">
+                    <a href="/" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Home</a>
+                    <a href="/dashboard" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Dashboard</a>
+                    <a href="/search-trains" class="transition duration-150" style="color: #BDEB29;">Search Trains</a>
+                    <a href="/help" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Help</a>
+                </nav>
+                
+                
+                <div class="flex items-center space-x-4">
+                    <a href="/dashboard" sec:authorize="isAuthenticated()" class="flex items-center space-x-2 px-3 py-2 rounded-lg font-semibold transition duration-150" style="background-color: rgba(189, 235, 41, 0.1); border: 1px solid #BDEB29; color: #BDEB29;" onmouseover="this.style.backgroundColor='rgba(189, 235, 41, 0.2)'; this.style.color='#FFFFFF'" onmouseout="this.style.backgroundColor='rgba(189, 235, 41, 0.1)'; this.style.color='#BDEB29'">
+                        <i data-lucide="user-circle" class="h-5 w-5"></i>
+                        <span class="text-sm font-medium" th:text="${#authentication.name}">Username</span>
+                    </a>
+                    <form th:action="@{/logout}" method="post" class="inline">
+                        <button type="submit" class="px-4 py-2 rounded-lg font-semibold transition duration-150" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'; this.style.color='#FFFFFF'" onmouseout="this.style.backgroundColor='#BDEB29'; this.style.color='#030304'" onclick="return confirm('Are you sure you want to logout?');">
+                            <i data-lucide="log-out" class="inline h-4 w-4 mr-2"></i>
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    
+    <div class="pt-20 min-h-screen" style="background-color: #030304;">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2" style="color: #FFFFFF;">
+                        <i data-lucide="search" class="inline h-8 w-8 mr-3" style="color: #BDEB29;"></i>
+                        Search Trains
+                    </h1>
+                    <p class="text-lg" style="color: #848484;">Find and book your perfect train journey</p>
+                </div>
+                <a href="/" class="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                    <i data-lucide="arrow-left" class="h-4 w-4 mr-2"></i>
+                    Back to Home
+                </a>
+            </div>
+
+            
+            <div th:if="${error}" class="mb-6 p-4 rounded-lg" style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);">
+                <div class="flex items-center">
+                    <i data-lucide="alert-circle" class="h-5 w-5 mr-2" style="color: #ef4444;"></i>
+                    <span th:text="${error}" style="color: #ef4444;">Error message</span>
+                </div>
+            </div>
+
+            
+            <div class="search-card p-6 rounded-xl" style="min-height: auto;">
+                <form th:action="@{/trains/search/results}" method="get">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label for="fromStation" class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                <i data-lucide="map-pin" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                From Station
+                            </label>
+                            <select id="fromStation" name="fromStation" class="form-input w-full px-4 py-3 rounded-lg" required>
+                                <option value="">Select departure station</option>
+                                <option th:each="station : ${stations}" 
+                                        th:value="${station.name}" 
+                                        th:text="${station.name + ' - ' + station.location}">
+                                    Central Station - Downtown
+                                </option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="toStation" class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                <i data-lucide="map-pin" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                To Station
+                            </label>
+                            <select id="toStation" name="toStation" class="form-input w-full px-4 py-3 rounded-lg" required>
+                                <option value="">Select arrival station</option>
+                                <option th:each="station : ${stations}" 
+                                        th:value="${station.name}" 
+                                        th:text="${station.name + ' - ' + station.location}">
+                                    Central Station - Downtown
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label for="date" class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                <i data-lucide="calendar" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                Travel Date
+                            </label>
+                            <input type="date" id="date" name="date" class="form-input w-full px-4 py-3 rounded-lg" required />
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button type="submit" class="btn-primary px-8 py-3 rounded-lg font-semibold inline-flex items-center">
+                            <i data-lucide="search" class="h-4 w-4 mr-2"></i>
+                            Search Trains
+                        </button>
+                        <a href="/" class="btn-secondary px-8 py-3 rounded-lg font-semibold inline-flex items-center">
+                            <i data-lucide="x" class="h-4 w-4 mr-2"></i>
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+    </script>
+</body>
+</html>

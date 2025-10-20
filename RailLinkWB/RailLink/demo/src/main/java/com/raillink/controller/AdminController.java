@@ -94,20 +94,24 @@ public class AdminController {
     }
     @PostMapping("/routes")
     public ResponseEntity<Route> createRoute(@RequestBody Map<String, String> request) {
+        // Request-la irukkura route details-a eduthu new route create pannrom
         String name = request.get("name");
         String description = request.get("description");
         String routeCode = request.get("routeCode");
         String path = request.get("path");
         Route route = routeService.createRoute(name, description, routeCode, path);
+        // Create aana route-a response-la return pannrom
         return ResponseEntity.ok(route);
     }
     @PutMapping("/routes/{id}")
     public ResponseEntity<Route> updateRoute(@PathVariable Long id, @RequestBody Route route) {
+        // Existing route update pannrom, id use pannitu
         Route updatedRoute = routeService.updateRoute(id, route);
         return ResponseEntity.ok(updatedRoute);
     }
     @DeleteMapping("/routes/{id}")
     public ResponseEntity<?> deleteRoute(@PathVariable Long id) {
+        // Single route fetch pannrom id use pannitu, illa na exception throw pannrom
         routeService.deleteRoute(id);
         return ResponseEntity.ok().build();
     }

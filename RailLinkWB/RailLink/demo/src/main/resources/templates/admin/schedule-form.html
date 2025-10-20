@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Form - RailLink</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles based on the index design system */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #030304; /* Deep black background */
+            color: #FFFFFF; /* White text */
+        }
+
+        .form-control {
+            background-color: rgba(24, 24, 29, 0.6);
+            border: 2px solid #18181D;
+            color: #FFFFFF;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #BDEB29;
+            background-color: rgba(24, 24, 29, 0.8);
+            box-shadow: 0 0 0 3px rgba(189, 235, 41, 0.1);
+        }
+        
+        .form-control::placeholder {
+            color: #848484;
+        }
+        
+        .station-item {
+            background-color: rgba(24, 24, 29, 0.4);
+            border: 1px solid #18181D;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+        
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #BDEB29;
+        }
+        
+        /* Custom select arrow */
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23BDEB29' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 20px;
+            padding-right: 2.5rem;
+        }
+    </style>
+  </head>
+<body class="min-h-screen">
+
+    
+    <header class="fixed top-0 left-0 w-full z-40 backdrop-blur-sm" style="background-color: rgba(24, 24, 29, 0.9);">   
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center py-4">
+            
+            <a href="/" class="flex items-center space-x-2 text-xl font-bold text-white">
+                <i data-lucide="train-front" class="h-6 w-6" style="color: #BDEB29;"></i>
+                <span>RailLink</span>
+            </a>
+            
+            
+            <nav class="hidden md:flex space-x-6 text-white text-sm font-medium">
+                <a href="/" class="hover:transition duration-150" style="color: #FFFFFF;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#FFFFFF'">Home</a>
+                <a href="/admin/dashboard" class="hover:transition duration-150" style="color: #FFFFFF;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#FFFFFF'">Dashboard</a>
+                <a href="/admin/schedules" class="hover:transition duration-150" style="color: #BDEB29;">Schedules</a>
+                <a href="/admin/trains" class="hover:transition duration-150" style="color: #FFFFFF;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#FFFFFF'">Trains</a>
+                <a href="/admin/routes" class="hover:transition duration-150" style="color: #FFFFFF;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#FFFFFF'">Routes</a>
+            </nav>
+
+            
+            <div class="flex items-center space-x-4">
+                <span class="text-white text-sm" sec:authentication="name">Admin</span>
+                <form th:action="@{/logout}" method="post" class="inline">
+                    <button type="submit" class="text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'" onmouseout="this.style.backgroundColor='#BDEB29'">
+                        <i data-lucide="log-out" class="inline h-4 w-4 mr-1"></i>
+                        Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    
+    <div class="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto">
+            
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-4xl font-bold flex items-center gap-3" style="color: #FFFFFF;">
+                        <i data-lucide="calendar-plus" class="h-10 w-10" style="color: #BDEB29;"></i>
+                    <span th:text="${schedule.id == null ? 'Add New Schedule' : 'Edit Schedule'}">Schedule Form</span>
+                </h1>
+                    <p class="text-lg mt-2" style="color: #848484;">Fill in the schedule details below</p>
+                </div>
+                <a href="/admin/schedules" class="inline-flex items-center gap-2 text-sm font-semibold py-2 px-5 rounded-lg transition duration-150" style="background-color: #18181D; color: #BDEB29; border: 2px solid #BDEB29;" onmouseover="this.style.backgroundColor='#BDEB29'; this.style.color='#030304'" onmouseout="this.style.backgroundColor='#18181D'; this.style.color='#BDEB29'">
+                    <i data-lucide="arrow-left" class="h-4 w-4"></i>
+                    Back
+                </a>
+            </div>
+
+            
+            <div class="rounded-xl shadow-2xl p-8" style="background-color: rgba(24, 24, 29, 0.8);">
+
+            <form th:action="@{/admin/schedules/save}" th:object="${schedule}" method="post">
+                <input type="hidden" th:field="*{id}" />
+                
+                    
+                    <div class="mb-6">
+                        <label for="scheduleName" class="flex items-center gap-2 text-sm font-semibold mb-2" style="color: #BDEB29;">
+                            <i data-lucide="tag" class="h-4 w-4"></i>
+                            Schedule Name
+                    </label>
+                    <input type="text" id="scheduleName" th:field="*{scheduleName}" 
+                               class="form-control w-full px-4 py-3 rounded-lg" 
+                               placeholder="Enter schedule name (e.g., Morning Express, Evening Commuter)" />
+                </div>
+                
+                    
+                    <div class="mb-6">
+                        <label for="trainId" class="flex items-center gap-2 text-sm font-semibold mb-2" style="color: #BDEB29;">
+                            <i data-lucide="train" class="h-4 w-4"></i>
+                            Train
+                    </label>
+                        <select id="trainId" name="trainId" class="form-control w-full px-4 py-3 rounded-lg" required>
+                        <option value="">Select Train</option>
+                        <option th:each="train : ${trains}" 
+                                th:value="${train.id}" 
+                                th:text="${train.name + ' (Capacity: ' + train.capacity + ')'}"
+                                th:selected="${schedule.train != null and schedule.train.id == train.id}">
+                            Express 101 (Capacity: 150)
+                        </option>
+                    </select>
+                </div>
+
+                    
+                    <div class="mb-6">
+                        <label for="routeId" class="flex items-center gap-2 text-sm font-semibold mb-2" style="color: #BDEB29;">
+                            <i data-lucide="route" class="h-4 w-4"></i>
+                            Route
+                    </label>
+                        <select id="routeId" name="routeId" class="form-control w-full px-4 py-3 rounded-lg" required>
+                        <option value="">Select Route</option>
+                        <option th:each="route : ${routes}" 
+                                th:value="${route.id}" 
+                                th:text="${route.name}"
+                                th:selected="${schedule.route != null and schedule.route.id == route.id}">
+                            Express Route
+                        </option>
+                    </select>
+                </div>
+
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label for="departureDate" class="flex items-center gap-2 text-sm font-semibold mb-2" style="color: #BDEB29;">
+                                <i data-lucide="calendar-arrow-up" class="h-4 w-4"></i>
+                                Departure Date & Time
+                        </label>
+                        <input type="datetime-local" id="departureDate" th:field="*{departureDate}" 
+                                   class="form-control w-full px-4 py-3 rounded-lg" required />
+                    </div>
+
+                        <div>
+                            <label for="arrivalDate" class="flex items-center gap-2 text-sm font-semibold mb-2" style="color: #BDEB29;">
+                                <i data-lucide="calendar-arrow-down" class="h-4 w-4"></i>
+                                Arrival Date & Time
+                        </label>
+                        <input type="datetime-local" id="arrivalDate" th:field="*{arrivalDate}" 
+                                   class="form-control w-full px-4 py-3 rounded-lg" required />
+                    </div>
+                </div>
+
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label for="status" class="flex items-center gap-2 text-sm font-semibold mb-2" style="color: #BDEB29;">
+                                <i data-lucide="info" class="h-4 w-4"></i>
+                                Status
+                        </label>
+                            <select id="status" th:field="*{status}" class="form-control w-full px-4 py-3 rounded-lg" required>
+                            <option value="">Select Status</option>
+                            <option value="ON_TIME">On Time</option>
+                            <option value="DELAYED">Delayed</option>
+                            <option value="CANCELLED">Cancelled</option>
+                        </select>
+                    </div>
+                    
+                        <div id="delayMinutesGroup" style="display: none;">
+                            <label for="delayMinutes" class="flex items-center gap-2 text-sm font-semibold mb-2" style="color: #BDEB29;">
+                                <i data-lucide="clock" class="h-4 w-4"></i>
+                                Delay (Minutes)
+                        </label>
+                        <input type="number" id="delayMinutes" th:field="*{delayMinutes}" 
+                                   class="form-control w-full px-4 py-3 rounded-lg" min="0" placeholder="Enter delay in minutes" />
+                    </div>
+                </div>
+
+                    
+                    <div class="mb-6">
+                        <label class="flex items-center gap-2 text-sm font-semibold mb-3" style="color: #BDEB29;">
+                            <i data-lucide="dollar-sign" class="h-4 w-4"></i>
+                            Ticket Pricing by Class
+                        </label>
+                        
+                        
+                        <div class="p-4 rounded-lg mb-4" style="background-color: rgba(189, 235, 41, 0.1); border-left: 4px solid #BDEB29;">
+                            <div class="flex items-start gap-3">
+                                <i data-lucide="info" class="h-5 w-5 mt-0.5" style="color: #BDEB29;"></i>
+                                <div>
+                                    <p class="text-sm font-semibold mb-1" style="color: #BDEB29;">Pricing Setup:</p>
+                                    <p class="text-xs" style="color: #848484;">
+                                        Set ticket prices for each class available in the selected train. Prices should be in LKR (Sri Lankan Rupees).
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="noTrainMessage" class="p-6 rounded-lg text-center" style="background-color: rgba(132, 132, 132, 0.1); border: 1px solid #18181D;">
+                            <i data-lucide="info" class="h-12 w-12 mx-auto mb-3" style="color: #848484;"></i>
+                            <p class="text-sm" style="color: #848484;">Please select a train above to set pricing for its classes</p>
+                        </div>
+                        
+                        <div id="loadingPricingMessage" class="p-6 rounded-lg text-center" style="display: none; background-color: rgba(189, 235, 41, 0.1); border: 1px solid #BDEB29;">
+                            <div class="animate-spin h-8 w-8 border-4 border-t-transparent rounded-full mx-auto mb-3" style="border-color: #BDEB29; border-top-color: transparent;"></div>
+                            <p class="text-sm" style="color: #BDEB29;">Loading train classes...</p>
+                        </div>
+                        
+                        <div id="pricingContainer" class="space-y-4" style="display: none;">
+                            
+                        </div>
+                    </div>
+                
+                    
+                    <div class="mb-6">
+                        <label class="flex items-center gap-2 text-sm font-semibold mb-3" style="color: #BDEB29;">
+                            <i data-lucide="calendar-check" class="h-4 w-4"></i>
+                            Running Dates
+                    </label>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="startDate" class="block text-sm font-medium mb-2" style="color: #848484;">Start Date</label>
+                                    <input type="date" id="startDate" name="startDate" class="form-control w-full px-4 py-3 rounded-lg" required />
+                                </div>
+                                <div>
+                                    <label for="endDate" class="block text-sm font-medium mb-2" style="color: #848484;">End Date</label>
+                                    <input type="date" id="endDate" name="endDate" class="form-control w-full px-4 py-3 rounded-lg" required />
+                            </div>
+                            </div>
+                            <div class="flex items-center gap-2 text-white">
+                                <input type="checkbox" id="dailySchedule" name="dailySchedule" value="true" />
+                                <label for="dailySchedule" class="cursor-pointer">Create daily schedule for all dates in range</label>
+                        </div>
+                    </div>
+                </div>
+
+                    
+                    <div class="mb-8">
+                        <label class="flex items-center gap-2 text-sm font-semibold mb-3" style="color: #BDEB29;">
+                            <i data-lucide="map-pin" class="h-4 w-4"></i>
+                            Route Stations
+                    </label>
+                        
+                        
+                        <div class="p-4 rounded-lg mb-4" style="background-color: rgba(189, 235, 41, 0.1); border-left: 4px solid #BDEB29;">
+                            <div class="flex items-start gap-3">
+                                <i data-lucide="info" class="h-5 w-5 mt-0.5" style="color: #BDEB29;"></i>
+                                <div>
+                                    <p class="text-sm font-semibold mb-1" style="color: #BDEB29;">How it works:</p>
+                                    <p class="text-xs" style="color: #848484;">
+                                        1. First, make sure your route has stations assigned (Edit the route to add stations)<br>
+                                        2. Select a route above to automatically load its stations<br>
+                                        3. The stations will appear in the order defined in the route
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="noRouteMessage" class="p-6 rounded-lg text-center" style="background-color: rgba(132, 132, 132, 0.1); border: 1px solid #18181D;">
+                            <i data-lucide="info" class="h-12 w-12 mx-auto mb-3" style="color: #848484;"></i>
+                            <p class="text-sm" style="color: #848484;">Please select a route above to view its stations</p>
+                        </div>
+                        
+                        <div id="loadingMessage" class="p-6 rounded-lg text-center" style="display: none; background-color: rgba(189, 235, 41, 0.1); border: 1px solid #BDEB29;">
+                            <div class="animate-spin h-8 w-8 border-4 border-t-transparent rounded-full mx-auto mb-3" style="border-color: #BDEB29; border-top-color: transparent;"></div>
+                            <p class="text-sm" style="color: #BDEB29;">Loading stations...</p>
+                        </div>
+                        
+                        <div id="noStationsMessage" class="p-6 rounded-lg text-center" style="display: none; background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444;">
+                            <i data-lucide="alert-circle" class="h-12 w-12 mx-auto mb-3" style="color: #ef4444;"></i>
+                            <p class="text-sm font-semibold mb-2" style="color: #ef4444;">This route has no stations!</p>
+                            <p class="text-xs" style="color: #848484;">Please go to <a href="/admin/routes" class="underline" style="color: #BDEB29;">Manage Routes</a> and add stations to this route first.</p>
+                        </div>
+                        
+                        <div id="routeStationsList" class="space-y-3" style="display: none;">
+                            
+                        </div>
+                    </div>
+
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 mt-8 pt-6 border-t" style="border-color: #18181D;">
+                        <button type="submit" class="flex items-center justify-center gap-2 text-sm font-semibold py-3 px-6 rounded-lg shadow-md transition duration-150" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'" onmouseout="this.style.backgroundColor='#BDEB29'">
+                            <i data-lucide="save" class="h-5 w-5"></i>
+                            Save Schedule
+                        </button>
+                        <a href="/admin/schedules" class="flex items-center justify-center gap-2 text-sm font-semibold py-3 px-6 rounded-lg transition duration-150" style="background-color: #18181D; color: #FFFFFF; border: 2px solid #848484;" onmouseover="this.style.borderColor='#FFFFFF'" onmouseout="this.style.borderColor='#848484'">
+                            <i data-lucide="x" class="h-5 w-5"></i>
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+                </div>
+        </div>
+    </div>
+
+    
+    <footer style="background-color: #030304; color: #FFFFFF; border-top: 1px solid #18181D;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center space-x-2 text-lg font-bold">
+                    <i data-lucide="train-front" class="h-5 w-5" style="color: #BDEB29;"></i>
+                    <span>RailLink</span>
+                </div>
+                <p class="text-sm" style="color: #848484;">©2025 RailLink. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+        
+        // Handle delay minutes field visibility
+        document.getElementById('status').addEventListener('change', function() {
+            const delayGroup = document.getElementById('delayMinutesGroup');
+            if (this.value === 'DELAYED') {
+                delayGroup.style.display = 'block';
+                document.getElementById('delayMinutes').required = true;
+            } else {
+                delayGroup.style.display = 'none';
+                document.getElementById('delayMinutes').required = false;
+                document.getElementById('delayMinutes').value = '';
+            }
+        });
+        
+        // Auto-populate pricing fields from selected train
+        document.getElementById('trainId').addEventListener('change', function() {
+            const trainId = this.value;
+            const noTrainMessage = document.getElementById('noTrainMessage');
+            const loadingPricingMessage = document.getElementById('loadingPricingMessage');
+            const pricingContainer = document.getElementById('pricingContainer');
+            
+            // Hide all messages
+            noTrainMessage.style.display = 'none';
+            loadingPricingMessage.style.display = 'none';
+            pricingContainer.style.display = 'none';
+            
+            if (!trainId) {
+                noTrainMessage.style.display = 'block';
+                return;
+            }
+            
+            // Show loading
+            loadingPricingMessage.style.display = 'block';
+            console.log('Fetching train classes for train ID:', trainId);
+            
+            // Fetch train details to get classes
+            fetch(`/api/admin/trains/${trainId}`)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(train => {
+                    console.log('Train data received:', train);
+                    
+                    if (train.classes && Object.keys(train.classes).length > 0) {
+                        loadingPricingMessage.style.display = 'none';
+                        pricingContainer.style.display = 'block';
+                        
+                        // Build pricing inputs for each class
+                        let pricingHTML = '';
+                        Object.keys(train.classes).forEach(className => {
+                            const seatCount = train.classes[className];
+                            pricingHTML += `
+                                <div class="p-4 rounded-lg" style="background-color: rgba(24, 24, 29, 0.6); border: 1px solid #18181D;">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0" style="background-color: #BDEB29; color: #030304;">
+                                                <i data-lucide="star" class="h-4 w-4"></i>
+                                            </div>
+                                            <div>
+                                                <div class="font-semibold" style="color: #FFFFFF;">${className}</div>
+                                                <div class="text-xs" style="color: #848484;">${seatCount} seats available</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-medium mb-2" style="color: #848484;">
+                                                <i data-lucide="dollar-sign" class="inline h-3 w-3 mr-1"></i>
+                                                Price per Ticket (LKR)
+                                            </label>
+                                            <input type="hidden" name="classNames" value="${className}" />
+                                            <input type="number" 
+                                                   name="classPrices" 
+                                                   data-class="${className}"
+                                                   class="form-control w-full px-3 py-2 rounded-lg text-sm" 
+                                                   min="0" 
+                                                   step="0.01"
+                                                   placeholder="0.00" 
+                                                   required />
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium mb-2" style="color: #848484;">
+                                                <i data-lucide="calculator" class="inline h-3 w-3 mr-1"></i>
+                                                Total Revenue Potential
+                                            </label>
+                                            <div class="px-3 py-2 rounded-lg text-sm text-center" style="background-color: rgba(189, 235, 41, 0.1); color: #BDEB29; border: 1px solid rgba(189, 235, 41, 0.3);">
+                                                <span class="revenue-display" data-class="${className}">LKR 0.00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        pricingContainer.innerHTML = pricingHTML;
+                        
+                        // Add event listeners for price calculation
+                        pricingContainer.querySelectorAll('input[name="classPrices"]').forEach(input => {
+                            input.addEventListener('input', function() {
+                                const className = this.dataset.class;
+                                const price = parseFloat(this.value) || 0;
+                                const seatCount = train.classes[className];
+                                const totalRevenue = price * seatCount;
+                                
+                                const revenueDisplay = document.querySelector(`.revenue-display[data-class="${className}"]`);
+                                if (revenueDisplay) {
+                                    revenueDisplay.textContent = `LKR ${totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                }
+                            });
+                        });
+                        
+                        // Re-initialize Lucide icons
+                        lucide.createIcons();
+                    } else {
+                        console.warn('Train has no classes assigned');
+                        loadingPricingMessage.style.display = 'none';
+                        pricingContainer.innerHTML = `
+                            <div class="p-6 rounded-lg text-center" style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444;">
+                                <i data-lucide="alert-circle" class="h-12 w-12 mx-auto mb-3" style="color: #ef4444;"></i>
+                                <p class="text-sm font-semibold mb-2" style="color: #ef4444;">This train has no classes assigned!</p>
+                                <p class="text-xs" style="color: #848484;">Please go to <a href="/admin/trains" class="underline" style="color: #BDEB29;">Manage Trains</a> and add classes to this train first.</p>
+                            </div>
+                        `;
+                        pricingContainer.style.display = 'block';
+                        lucide.createIcons();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching train classes:', error);
+                    loadingPricingMessage.style.display = 'none';
+                    alert('Error loading train classes: ' + error.message + '\n\nPlease check:\n1. The train has classes assigned\n2. The application is running\n3. Check browser console for more details (F12)');
+                    noTrainMessage.style.display = 'block';
+                });
+        });
+
+        // Auto-populate stations from selected route
+        document.getElementById('routeId').addEventListener('change', function() {
+            const routeId = this.value;
+            const noRouteMessage = document.getElementById('noRouteMessage');
+            const loadingMessage = document.getElementById('loadingMessage');
+            const noStationsMessage = document.getElementById('noStationsMessage');
+            const routeStationsList = document.getElementById('routeStationsList');
+            
+            // Hide all messages
+            noRouteMessage.style.display = 'none';
+            loadingMessage.style.display = 'none';
+            noStationsMessage.style.display = 'none';
+            routeStationsList.style.display = 'none';
+            
+            if (!routeId) {
+                noRouteMessage.style.display = 'block';
+                return;
+            }
+            
+            // Show loading
+            loadingMessage.style.display = 'block';
+            console.log('Fetching route stations for route ID:', routeId);
+            
+            // Fetch route details and then get station information
+            fetch(`/api/admin/routes/${routeId}`)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(route => {
+                    console.log('Route data received:', route);
+                    
+                    if (route.path && route.path.trim() !== '') {
+                        // Get station IDs from the path
+                        const stationIds = route.path.split(',').map(id => id.trim());
+                        console.log('Station IDs from path:', stationIds);
+                        
+                        // Fetch all stations to get details
+                        return fetch('/api/admin/stations')
+                            .then(response => response.json())
+                            .then(allStations => {
+                                // Filter stations that are in the route path and maintain order
+                                const routeStations = stationIds.map(stationId => {
+                                    return allStations.find(station => station.id.toString() === stationId);
+                                }).filter(station => station !== undefined);
+                                
+                                console.log('Found', routeStations.length, 'stations for route');
+                                
+                                loadingMessage.style.display = 'none';
+                                routeStationsList.style.display = 'block';
+                                
+                                // Build stations list with time inputs
+                                let stationsHTML = '';
+                                routeStations.forEach((station, index) => {
+                                    const isFirstStation = index === 0;
+                                    const isLastStation = index === routeStations.length - 1;
+                            
+                            stationsHTML += `
+                                <div class="p-5 rounded-lg" style="background-color: rgba(24, 24, 29, 0.6); border: 1px solid #18181D;">
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <div class="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0" style="background-color: #BDEB29; color: #030304;">
+                                            <span class="font-bold text-sm">${index + 1}</span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="font-semibold" style="color: #FFFFFF;">${station.name}</div>
+                                            <div class="text-xs" style="color: #848484;">${station.location || 'No location'}</div>
+                                        </div>
+                                        <i data-lucide="map-pin" class="h-5 w-5 flex-shrink-0" style="color: #BDEB29;"></i>
+                                    </div>
+                                    
+                                    
+                                    <input type="hidden" name="stationIds" value="${station.id}" />
+                                    
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        ${!isFirstStation ? `
+                                            <div>
+                                                <label class="block text-xs font-medium mb-2" style="color: #848484;">
+                                                    <i data-lucide="clock" class="inline h-3 w-3 mr-1"></i>
+                                                    Arrival Time
+                                                </label>
+                                                <input type="datetime-local" 
+                                                       name="arrivalTimes" 
+                                                       class="form-control w-full px-3 py-2 rounded-lg text-sm" 
+                                                       required />
+                                            </div>
+                                        ` : `
+                                            <div>
+                                                <label class="block text-xs font-medium mb-2" style="color: #848484;">
+                                                    <i data-lucide="play-circle" class="inline h-3 w-3 mr-1"></i>
+                                                    Starting Station
+                                                </label>
+                                                <input type="hidden" name="arrivalTimes" value="" />
+                                                <div class="px-3 py-2 rounded-lg text-sm text-center" style="background-color: rgba(189, 235, 41, 0.1); color: #BDEB29; border: 1px solid rgba(189, 235, 41, 0.3);">
+                                                    Origin - No arrival time needed
+                                                </div>
+                                            </div>
+                                        `}
+                                        
+                                        ${!isLastStation ? `
+                                            <div>
+                                                <label class="block text-xs font-medium mb-2" style="color: #848484;">
+                                                    <i data-lucide="clock" class="inline h-3 w-3 mr-1"></i>
+                                                    Departure Time
+                                                </label>
+                                                <input type="datetime-local" 
+                                                       name="departureTimes" 
+                                                       class="form-control w-full px-3 py-2 rounded-lg text-sm" 
+                                                       required />
+                                            </div>
+                                        ` : `
+                                            <div>
+                                                <label class="block text-xs font-medium mb-2" style="color: #848484;">
+                                                    <i data-lucide="flag" class="inline h-3 w-3 mr-1"></i>
+                                                    Final Destination
+                                                </label>
+                                                <input type="hidden" name="departureTimes" value="" />
+                                                <div class="px-3 py-2 rounded-lg text-sm text-center" style="background-color: rgba(189, 235, 41, 0.1); color: #BDEB29; border: 1px solid rgba(189, 235, 41, 0.3);">
+                                                    Destination - No departure time needed
+                                                </div>
+                                            </div>
+                                        `}
+                                    </div>
+                                    
+                                    
+                                    <div class="mt-4">
+                                        <label class="block text-xs font-medium mb-2" style="color: #848484;">
+                                            <i data-lucide="train-track" class="inline h-3 w-3 mr-1"></i>
+                                            Platform (Optional)
+                                        </label>
+                                        <input type="text" 
+                                               name="platforms" 
+                                               class="form-control w-full px-3 py-2 rounded-lg text-sm" 
+                                               placeholder="e.g., Platform 1, Track A" />
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                                routeStationsList.innerHTML = stationsHTML;
+                                
+                                // Re-initialize Lucide icons
+                                lucide.createIcons();
+                            });
+                    } else {
+                        console.warn('Route has no stations assigned');
+                        loadingMessage.style.display = 'none';
+                        noStationsMessage.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching route stations:', error);
+                    loadingMessage.style.display = 'none';
+                    alert('Error loading route stations: ' + error.message + '\n\nPlease check:\n1. Your route has stations assigned\n2. The application is running\n3. Check browser console for more details (F12)');
+                    noRouteMessage.style.display = 'block';
+                });
+        });
+        
+        // Set default dates
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            const startDate = document.getElementById('startDate');
+            const endDate = document.getElementById('endDate');
+            
+            if (startDate && !startDate.value) {
+                startDate.value = today.toISOString().split('T')[0];
+            }
+            if (endDate && !endDate.value) {
+                endDate.value = tomorrow.toISOString().split('T')[0];
+            }
+            
+            // Initialize all Lucide icons on page load
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

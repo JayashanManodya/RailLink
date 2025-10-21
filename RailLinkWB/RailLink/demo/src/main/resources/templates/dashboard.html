@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>RailLink - Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #030304;
+            color: #FFFFFF;
+        }
+
+        .dashboard-card {
+            background-color: rgba(24, 24, 29, 0.8);
+            border: 1px solid #18181D;
+            transition: all 0.3s ease;
+        }
+        
+        .dashboard-card:hover {
+            background-color: rgba(24, 24, 29, 0.9);
+            border-color: #BDEB29;
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background-color: #BDEB29;
+            color: #030304;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #8CA43F;
+            color: #FFFFFF;
+        }
+        
+        .form-input {
+            background-color: rgba(24, 24, 29, 0.8);
+            border: 1px solid #848484;
+            color: #FFFFFF;
+        }
+        
+        .form-input:focus {
+            border-color: #BDEB29;
+            box-shadow: 0 0 0 3px rgba(189, 235, 41, 0.1);
+        }
+        
+        .schedule-item {
+            background-color: rgba(24, 24, 29, 0.8);
+            border: 1px solid #18181D;
+            border-left: 4px solid #BDEB29;
+        }
+        
+        .announcement-card {
+            background: linear-gradient(135deg, rgba(189, 235, 41, 0.1), rgba(140, 164, 63, 0.1));
+            border: 1px solid rgba(189, 235, 41, 0.2);
+        }
+    </style>
+</head>
+<body>
+    
+    <header style="background-color: rgba(24, 24, 29, 0.9);" class="fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                
+                <a href="/" class="flex items-center space-x-2 text-xl font-bold" style="color: #FFFFFF;">
+                    <i data-lucide="train-front" class="h-6 w-6" style="color: #BDEB29;"></i>
+                    <span>RailLink</span>
+                </a>
+                
+                
+                <nav class="hidden md:flex space-x-8">
+                    <a href="/" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Home</a>
+                    <a href="/dashboard" class="transition duration-150" style="color: #BDEB29;">Dashboard</a>
+                    <a href="/search-trains" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Search Trains</a>
+                    <a href="/help" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Help</a>
+                </nav>
+                
+                
+                <div class="flex items-center space-x-4">
+                    <a href="/dashboard" sec:authorize="isAuthenticated()" class="flex items-center space-x-2 px-3 py-2 rounded-lg font-semibold transition duration-150" style="background-color: rgba(189, 235, 41, 0.1); border: 1px solid #BDEB29; color: #BDEB29;" onmouseover="this.style.backgroundColor='rgba(189, 235, 41, 0.2)'; this.style.color='#FFFFFF'" onmouseout="this.style.backgroundColor='rgba(189, 235, 41, 0.1)'; this.style.color='#BDEB29'">
+                        <i data-lucide="user-circle" class="h-5 w-5"></i>
+                        <span class="text-sm font-medium" th:text="${#authentication.name}">Username</span>
+                    </a>
+                    <form th:action="@{/logout}" method="post" class="inline">
+                        <button type="submit" class="px-4 py-2 rounded-lg font-semibold transition duration-150" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'; this.style.color='#FFFFFF'" onmouseout="this.style.backgroundColor='#BDEB29'; this.style.color='#030304'" onclick="return confirm('Are you sure you want to logout?');">
+                            <i data-lucide="log-out" class="inline h-4 w-4 mr-2"></i>
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    
+    <div class="pt-20 min-h-screen" style="background-color: #030304;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <div class="text-center mb-12">
+                <div class="flex justify-center mb-4">
+                    <div class="p-3 rounded-full" style="background-color: rgba(189, 235, 41, 0.1);">
+                        <i data-lucide="user" class="h-8 w-8" style="color: #BDEB29;"></i>
+                    </div>
+                </div>
+                <h1 class="text-4xl font-bold mb-2" style="color: #FFFFFF;">
+                    Welcome back<span th:if="${currentUser != null}">, <span th:text="${currentUser.username}">User</span></span>!
+                </h1>
+                <p class="text-lg" style="color: #848484;">Here's an overview of your RailLink activity</p>
+            </div>
+
+        
+            <div th:if="${allAnnouncements != null and !#lists.isEmpty(allAnnouncements)}" class="announcement-card p-6 rounded-xl mb-8">
+                <h3 class="text-xl font-semibold mb-4" style="color: #BDEB29;">
+                    <i data-lucide="megaphone" class="inline h-5 w-5 mr-2"></i>
+                Important Announcements
+            </h3>
+                <div th:each="a : ${allAnnouncements}" class="p-4 rounded-lg mb-4" style="background-color: rgba(189, 235, 41, 0.05); border: 1px solid rgba(189, 235, 41, 0.2);">
+                    <div class="flex justify-between items-start mb-2">
+                        <strong th:text="${a.title}" class="text-lg font-semibold" style="color: #FFFFFF;"></strong>
+                        <span class="px-3 py-1 rounded-full text-sm font-semibold" style="background-color: #BDEB29; color: #030304;">
+                            <i data-lucide="clock" class="inline h-3 w-3 mr-1"></i>
+                            Active
+                    </span>
+                </div>
+                    <div th:text="${a.message}" class="mb-3" style="color: #848484; line-height: 1.5;"></div>
+                    <div class="flex justify-between items-center text-sm" style="color: #848484;">
+                    <span>
+                            <i data-lucide="calendar" class="inline h-4 w-4 mr-1"></i>
+                        <span th:text="${#temporals.format(a.startDate,'MMM dd, yyyy')}">Start Date</span>
+                        <span th:if="${a.endDate != null}">
+                            - <span th:text="${#temporals.format(a.endDate,'MMM dd, yyyy')}">End Date</span>
+                        </span>
+                    </span>
+                        <span th:if="${a.author != null}">
+                            <i data-lucide="user" class="inline h-4 w-4 mr-1"></i>
+                            <span th:text="${a.author}">Admin</span>
+                    </span>
+                    </div>
+            </div>
+        </div>
+
+        
+            <div th:if="${allAnnouncements == null or #lists.isEmpty(allAnnouncements)}" class="dashboard-card p-8 rounded-xl mb-8 text-center">
+                <i data-lucide="megaphone" class="h-12 w-12 mx-auto mb-4" style="color: #848484; opacity: 0.5;"></i>
+                <h3 class="text-xl font-semibold mb-2" style="color: #848484;">No Announcements</h3>
+                <p style="color: #848484;">There are currently no active announcements. Check back later for important updates!</p>
+        </div>
+
+        
+            <!-- Booking Statistics -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="dashboard-card p-6 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="p-2 rounded-lg" style="background-color: rgba(189, 235, 41, 0.1);">
+                            <i data-lucide="ticket" class="h-6 w-6" style="color: #BDEB29;"></i>
+                        </div>
+                        <span class="text-3xl font-bold" style="color: #BDEB29;" th:text="${totalBookings != null ? totalBookings : 0}">0</span>
+                    </div>
+                    <h3 class="text-sm font-medium" style="color: #848484;">Total Bookings</h3>
+                    <p class="text-xs mt-1" style="color: #848484;">All time bookings</p>
+                </div>
+
+                <div class="dashboard-card p-6 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="p-2 rounded-lg" style="background-color: rgba(189, 235, 41, 0.1);">
+                            <i data-lucide="check-circle" class="h-6 w-6" style="color: #BDEB29;"></i>
+                        </div>
+                        <span class="text-3xl font-bold" style="color: #BDEB29;" th:text="${activeBookings != null ? activeBookings : 0}">0</span>
+                    </div>
+                    <h3 class="text-sm font-medium" style="color: #848484;">Active Bookings</h3>
+                    <p class="text-xs mt-1" style="color: #848484;">Currently confirmed</p>
+                </div>
+
+                <div class="dashboard-card p-6 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="p-2 rounded-lg" style="background-color: rgba(189, 235, 41, 0.1);">
+                            <i data-lucide="calendar-check" class="h-6 w-6" style="color: #BDEB29;"></i>
+                        </div>
+                        <span class="text-3xl font-bold" style="color: #BDEB29;" th:text="${completedBookings != null ? completedBookings : 0}">0</span>
+                    </div>
+                    <h3 class="text-sm font-medium" style="color: #848484;">Completed Trips</h3>
+                    <p class="text-xs mt-1" style="color: #848484;">Successfully traveled</p>
+                </div>
+
+                <div class="dashboard-card p-6 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="p-2 rounded-lg" style="background-color: rgba(189, 235, 41, 0.1);">
+                            <i data-lucide="x-circle" class="h-6 w-6" style="color: #BDEB29;"></i>
+                        </div>
+                        <span class="text-3xl font-bold" style="color: #BDEB29;" th:text="${cancelledBookings != null ? cancelledBookings : 0}">0</span>
+                    </div>
+                    <h3 class="text-sm font-medium" style="color: #848484;">Cancelled</h3>
+                    <p class="text-xs mt-1" style="color: #848484;">Cancelled bookings</p>
+                </div>
+            </div>
+
+            <!-- Upcoming Trips -->
+            <div th:if="${upcomingTrips != null and !#lists.isEmpty(upcomingTrips)}" class="dashboard-card p-6 rounded-xl mb-8">
+                <h3 class="text-xl font-semibold mb-4" style="color: #FFFFFF;">
+                    <i data-lucide="calendar-days" class="inline h-5 w-5 mr-2" style="color: #BDEB29;"></i>
+                    Upcoming Trips
+                </h3>
+                <div class="space-y-3">
+                    <div th:each="booking : ${upcomingTrips}" class="schedule-item p-4 rounded-lg">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <strong class="text-lg font-semibold" style="color: #FFFFFF;" th:text="${booking.schedule != null && booking.schedule.train != null ? booking.schedule.train.name : 'Train'}">Train Name</strong>
+                                <div class="text-sm mt-1" style="color: #848484;">
+                                    <i data-lucide="route" class="inline h-3 w-3 mr-1"></i>
+                                    <span th:text="${booking.schedule != null && booking.schedule.route != null ? booking.schedule.route.name : 'Route'}">Route</span>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold" style="background-color: #BDEB29; color: #030304;" th:text="${booking.status}">CONFIRMED</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-sm" style="color: #848484;">
+                            <div th:if="${booking.schedule != null && booking.schedule.departureDate != null}">
+                                <i data-lucide="calendar" class="inline h-3 w-3 mr-1"></i>
+                                <span th:text="${#temporals.format(booking.schedule.departureDate, 'MMM dd, yyyy')}">Date</span>
+                            </div>
+                            <div th:if="${booking.schedule != null && booking.schedule.departureDate != null}">
+                                <i data-lucide="clock" class="inline h-3 w-3 mr-1"></i>
+                                <span th:text="${#temporals.format(booking.schedule.departureDate, 'HH:mm')}">Time</span>
+                            </div>
+                            <div th:if="${booking.seatNumber != null}">
+                                <i data-lucide="armchair" class="inline h-3 w-3 mr-1"></i>
+                                Seat: <span th:text="${booking.seatNumber}">1</span>
+                            </div>
+                            <div th:if="${booking.ticketClass != null}">
+                                <i data-lucide="star" class="inline h-3 w-3 mr-1"></i>
+                                <span th:text="${booking.ticketClass}">Class</span>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex gap-2">
+                            <a th:href="@{/bookings/{id}(id=${booking.id})}" class="btn-primary px-3 py-1 rounded text-sm font-semibold inline-flex items-center">
+                                <i data-lucide="eye" class="h-3 w-3 mr-1"></i>
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No upcoming trips message -->
+            <div th:if="${upcomingTrips == null or #lists.isEmpty(upcomingTrips)}" class="dashboard-card p-8 rounded-xl mb-8 text-center">
+                <i data-lucide="calendar-x" class="h-12 w-12 mx-auto mb-4" style="color: #848484; opacity: 0.5;"></i>
+                <h3 class="text-xl font-semibold mb-2" style="color: #848484;">No Upcoming Trips</h3>
+                <p style="color: #848484;" class="mb-4">You don't have any upcoming trips scheduled. Start planning your next journey!</p>
+                <a href="/search-trains" class="btn-primary inline-flex items-center px-4 py-2 rounded-lg font-semibold">
+                    <i data-lucide="search" class="h-4 w-4 mr-2"></i>
+                    Search Trains
+                </a>
+            </div>
+
+            <!-- Recent Bookings -->
+            <div th:if="${recentBookings != null and !#lists.isEmpty(recentBookings)}" class="dashboard-card p-6 rounded-xl mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold" style="color: #FFFFFF;">
+                        <i data-lucide="history" class="inline h-5 w-5 mr-2" style="color: #BDEB29;"></i>
+                        Recent Bookings
+                    </h3>
+                    <a href="/my-bookings" class="text-sm font-semibold" style="color: #BDEB29;">View All →</a>
+                </div>
+                <div class="space-y-3">
+                    <div th:each="booking : ${recentBookings}" class="schedule-item p-4 rounded-lg">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <strong class="text-base font-semibold" style="color: #FFFFFF;" th:text="${booking.schedule != null && booking.schedule.train != null ? booking.schedule.train.name : 'Train'}">Train Name</strong>
+                                <div class="text-sm mt-1" style="color: #848484;">
+                                    <span th:text="${booking.schedule != null && booking.schedule.route != null ? booking.schedule.route.name : 'Route'}">Route</span> • 
+                                    <span th:text="${booking.bookingDate != null ? #temporals.format(booking.bookingDate, 'MMM dd, yyyy') : 'N/A'}">Booking Date</span>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold" 
+                                  th:classappend="${booking.status == 'CONFIRMED' ? 'bg-green-500' : booking.status == 'CANCELLED' ? 'bg-red-500' : 'bg-gray-500'}"
+                                  style="background-color: #BDEB29; color: #030304;" 
+                                  th:text="${booking.status}">Status</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+                <div class="dashboard-card p-6 rounded-xl">
+                    <div class="flex items-center mb-4">
+                        <div class="p-2 rounded-lg" style="background-color: rgba(189, 235, 41, 0.1);">
+                            <i data-lucide="search" class="h-6 w-6" style="color: #BDEB29;"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold ml-3" style="color: #FFFFFF;">Search Trains</h3>
+                    </div>
+                    <p class="mb-4" style="color: #848484;">Find available trains and book tickets</p>
+                    <a href="/trains/search" class="btn-primary inline-flex items-center px-4 py-2 rounded-lg font-semibold">
+                        <i data-lucide="search" class="h-4 w-4 mr-2"></i>
+                        Search Now
+                </a>
+            </div>
+
+            
+                <div class="dashboard-card p-6 rounded-xl">
+                    <div class="flex items-center mb-4">
+                        <div class="p-2 rounded-lg" style="background-color: rgba(189, 235, 41, 0.1);">
+                            <i data-lucide="ticket" class="h-6 w-6" style="color: #BDEB29;"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold ml-3" style="color: #FFFFFF;">My Bookings</h3>
+                    </div>
+                    <p class="mb-4" style="color: #848484;">View and manage your current bookings</p>
+                    <a href="/my-bookings" class="btn-primary inline-flex items-center px-4 py-2 rounded-lg font-semibold">
+                        <i data-lucide="list" class="h-4 w-4 mr-2"></i>
+                        View Bookings
+                </a>
+            </div>
+
+            
+                <div class="dashboard-card p-6 rounded-xl" id="adminPanel" sec:authorize="hasRole('ADMIN')">
+                    <div class="flex items-center mb-4">
+                        <div class="p-2 rounded-lg" style="background-color: rgba(189, 235, 41, 0.1);">
+                            <i data-lucide="settings" class="h-6 w-6" style="color: #BDEB29;"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold ml-3" style="color: #FFFFFF;">Admin Panel</h3>
+                    </div>
+                    <p class="mb-4" style="color: #848484;">Manage trains, routes, and schedules</p>
+                    <a href="/admin/dashboard" class="btn-primary inline-flex items-center px-4 py-2 rounded-lg font-semibold">
+                        <i data-lucide="wrench" class="h-4 w-4 mr-2"></i>
+                        Admin Tools
+                </a>
+            </div>
+
+            
+                <div class="dashboard-card p-6 rounded-xl">
+                    <div class="flex items-center mb-4">
+                        <div class="p-2 rounded-lg" style="background-color: rgba(189, 235, 41, 0.1);">
+                            <i data-lucide="user" class="h-6 w-6" style="color: #BDEB29;"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold ml-3" style="color: #FFFFFF;">Profile</h3>
+                    </div>
+                    <p class="mb-4" style="color: #848484;">Update your account information</p>
+                    <a href="/profile" class="btn-primary inline-flex items-center px-4 py-2 rounded-lg font-semibold">
+                        <i data-lucide="edit" class="h-4 w-4 mr-2"></i>
+                        Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html> 

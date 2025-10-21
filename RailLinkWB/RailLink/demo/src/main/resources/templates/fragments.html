@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">RailLink</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+    
+    <nav th:fragment="navbar" class="navbar">
+        <div class="navbar-content">
+            <a href="/" class="logo">
+                <i class="fas fa-train"></i> RailLink
+            </a>
+            <ul class="nav-links">
+                <li><a href="/"><i class="fas fa-home"></i> Home</a></li>
+                <li sec:authorize="hasRole('PASSENGER')"><a href="/dashboard"><i class="fas fa-gauge"></i> Dashboard</a></li>
+                <li sec:authorize="hasRole('PASSENGER')"><a href="/trains/search"><i class="fas fa-search"></i> Search Trains</a></li>
+                <li sec:authorize="hasRole('PASSENGER')"><a href="/profile"><i class="fas fa-user"></i> Profile</a></li>
+                <li><a href="/help"><i class="fas fa-question-circle"></i> Help</a></li>
+                <li sec:authorize="hasRole('ADMIN')">
+                    <a href="/admin/dashboard"><i class="fas fa-cogs"></i> Admin Panel</a>
+                </li>
+                <li sec:authorize="hasRole('STAFF') and !hasRole('ADMIN')">
+                    <a href="/staff/dashboard"><i class="fas fa-briefcase"></i> Staff Panel</a>
+                </li>
+                <li sec:authorize="isAuthenticated()" class="nav-user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span th:text="${#authentication.name}"></span>
+                </li>
+                <li sec:authorize="isAuthenticated()">
+                    <form th:action="@{/logout}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to logout?');">
+                        <button type="submit" class="nav-logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </form>
+                </li>
+                <li sec:authorize="!isAuthenticated()">
+                    <a href="/login"><i class="fas fa-sign-in-alt"></i> Login</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    
+    <div th:fragment="scripts">
+        <script th:src="@{/js/app.js}" defer></script>
+    </div>
+
+    
+    <div th:fragment="modal(id, title, body)">
+        <div class="modal" th:attr="id=${id}" role="dialog" aria-modal="true" aria-hidden="true">
+            <div class="modal-content">
+                <button class="modal-close" th:attr="onclick=${'closeModal(\\'' + id + '\\')'}" aria-label="Close">&times;</button>
+                <h3 class="modal-title" th:text="${title}">Modal Title</h3>
+                <div class="modal-body" th:utext="${body}">Modal content</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

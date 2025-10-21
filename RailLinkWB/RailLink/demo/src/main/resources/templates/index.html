@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RailLink - Train Booking System</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles based on the new design system */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #030304; /* Deep black background */
+            color: #FFFFFF; /* White text */
+        }
+        .hero-section {
+            background-image: url('https://www.teardrop-hotels.com/wp-content/uploads/2025/03/1920x600.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+        }
+        .hero-overlay {
+            /* Dark overlay using design system color */
+            background-color: rgba(3, 3, 4, 0.5);
+        }
+        .destination-card {
+            transition: all 0.3s ease-in-out;
+        }
+        .destination-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        .testimonial-carousel {
+            scroll-snap-type: x mandatory;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .testimonial-item {
+            scroll-snap-align: start;
+            flex: 0 0 100%; /* Each item takes full width of container */
+        }
+        .no-scrollbar::-webkit-scrollbar {
+                display: none;
+            }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        /* Style for the calendar dropdown mock */
+        .calendar-dropdown {
+                display: none;
+            position: absolute;
+            z-index: 50;
+            /* Positioning for the calendar */
+            left: 0;
+            top: 100%;
+            width: 320px;
+        }
+        
+        /* Prevent zoom effects and ensure smooth transitions */
+        #booking-form {
+            transition: none;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+        }
+        
+        #returnDateSection {
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        #returnDateSection.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        #returnDateSection:not(.hidden) {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="text-black">
+
+    
+    <header class="fixed top-0 left-0 w-full z-40 backdrop-blur-sm" style="background-color: rgba(24, 24, 29, 0.9);">   
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center py-4">
+            
+            <a href="/" class="flex items-center space-x-2 text-xl font-bold text-white">
+                <i data-lucide="train-front" class="h-6 w-6" style="color: #BDEB29;"></i>
+                <span>RailLink</span>
+            </a>
+            
+            
+            <nav class="hidden md:flex space-x-6 text-white text-sm font-medium">
+                <a href="/" class="hover:transition duration-150" style="color: #FFFFFF;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#FFFFFF'">Home</a>
+                <a href="/dashboard" class="hover:transition duration-150" style="color: #FFFFFF;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#FFFFFF'">Dashboard</a>
+                <a href="/search-trains" class="hover:transition duration-150" style="color: #FFFFFF;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#FFFFFF'">Search Trains</a>
+                <a href="/help" class="hover:transition duration-150" style="color: #FFFFFF;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#FFFFFF'">Help</a>
+            </nav>
+
+            
+            <div class="flex items-center space-x-4">
+                <!-- Show for unauthenticated users -->
+                <div sec:authorize="!isAuthenticated()" class="flex items-center space-x-4">
+                    <a href="/login" class="text-white text-sm font-medium py-2 px-4 rounded-lg transition duration-150 hidden sm:block" style="color: #FFFFFF; border: 1px solid #848484;" onmouseover="this.style.color='#BDEB29'; this.style.borderColor='#BDEB29'" onmouseout="this.style.color='#FFFFFF'; this.style.borderColor='#848484'">Sign In</a>
+                    <a href="/register" class="text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 hidden sm:block" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'" onmouseout="this.style.backgroundColor='#BDEB29'">Sign Up</a>
+                </div>
+                
+                <!-- Show for authenticated users -->
+                <div sec:authorize="isAuthenticated()" class="flex items-center space-x-4">
+                    <a href="/dashboard" class="flex items-center space-x-2 px-3 py-2 rounded-lg font-semibold transition duration-150" style="background-color: rgba(189, 235, 41, 0.1); border: 1px solid #BDEB29; color: #BDEB29;" onmouseover="this.style.backgroundColor='rgba(189, 235, 41, 0.2)'; this.style.color='#FFFFFF'" onmouseout="this.style.backgroundColor='rgba(189, 235, 41, 0.1)'; this.style.color='#BDEB29'">
+                        <i data-lucide="user-circle" class="h-5 w-5"></i>
+                        <span class="text-sm font-medium" th:text="${#authentication.name}">Username</span>
+                    </a>
+                    <form th:action="@{/logout}" method="post" class="inline">
+                        <button type="submit" class="text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'" onmouseout="this.style.backgroundColor='#BDEB29'" onclick="return confirm('Are you sure you want to logout?');">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+    </div>
+</header>
+
+    
+    <section class="hero-section pt-32 pb-24 lg:pt-40 lg:pb-32">
+        <div class="hero-overlay absolute inset-0"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+            
+            <div class="text-white">
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-4 leading-tight" style="color: #FFFFFF;">WELCOME TO <br class="hidden sm:block"><span style="color: #BDEB29;">RailLink</span></h1>
+                <p class="text-lg" style="color: #848484;">Welcome to our website, you can book online your ticket and find the best trip.</p>
+            </div>
+
+            
+            <form th:action="@{/trains/search/results}" method="get" id="booking-form" class="p-6 sm:p-8 rounded-xl shadow-2xl space-y-6 text-white" style="background-color: rgba(24, 24, 29, 0.8);">
+                
+                
+                <div>
+                    <label class="block text-base font-medium mb-2">Travelling Route</label>
+                    <div class="grid grid-cols-[1fr_auto_1fr] gap-3 items-center">
+                        
+                        <div class="input-wrapper relative">
+                            <div class="flex items-center border border-black bg-white rounded-lg p-3 h-12 focus-within:ring-2 focus-within:ring-[#BDEB29] transition">
+                                <select name="fromStation" id="fromStation" class="w-full focus:outline-none text-black bg-transparent border-none" required>
+                                    <option value="">From Station</option>
+                                    <option th:each="station : ${stations}" 
+                                            th:value="${station.name}" 
+                                            th:text="${station.name + ' - ' + station.location}">
+                                        Colombo Fort - Colombo
+                                    </option>
+                                </select>
+                                <i data-lucide="map-pin" class="h-5 w-5 text-black ml-2"></i>
+        </div>
+    </div>
+                        
+                        
+                        <button type="button" id="swap-route-btn" class="p-2 rounded-full transition duration-150 shadow-md" style="background-color: #18181D;" onmouseover="this.style.backgroundColor='#BDEB29'" onmouseout="this.style.backgroundColor='#18181D'">
+                            <i data-lucide="refresh-cw" class="h-5 w-5 text-white"></i>
+                        </button>
+
+                        
+                        <div class="input-wrapper relative">
+                            <div class="flex items-center border border-black bg-white rounded-lg p-3 h-12 focus-within:ring-2 focus-within:ring-[#BDEB29] transition">
+                                <select name="toStation" id="toStation" class="w-full focus:outline-none text-black bg-transparent border-none" required>
+                                    <option value="">To Station</option>
+                                    <option th:each="station : ${stations}" 
+                                            th:value="${station.name}" 
+                                            th:text="${station.name + ' - ' + station.location}">
+                                        Kandy - Central Province
+                                    </option>
+                                </select>
+                                <i data-lucide="map-pin" class="h-5 w-5 text-black ml-2"></i>
+            </div>
+        </div>
+    </div>
+        </div>
+
+                
+                <div>
+                    <label class="block text-base font-medium mb-2">Travel Date</label>
+                    <div class="flex items-center border border-black bg-white rounded-lg p-3 h-12 focus-within:ring-2 focus-within:ring-[#BDEB29] transition">
+                        <input type="date" name="date" id="date" class="w-full focus:outline-none text-black bg-transparent border-none" required />
+                        <i data-lucide="calendar" class="h-5 w-5 text-black ml-2"></i>
+                </div>
+            </div>
+
+                
+
+                
+                <div>
+                    <div class="flex items-center gap-4">
+                        
+                        <div class="flex items-center gap-3">
+                            <span class="text-white">Return</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="returnToggle" class="sr-only peer">
+                                <div class="w-11 h-6 bg-black peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#BDEB29] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-black after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#BDEB29]"></div>
+                            </label>
+            </div>
+
+                        
+                        <div id="returnDateSection" class="hidden flex-1">
+                            <div class="flex items-center border border-black bg-white rounded-lg p-3 h-12 focus-within:ring-2 focus-within:ring-[#BDEB29] transition">
+                                <input type="date" name="returnDate" id="returnDate" class="w-full focus:outline-none text-black bg-transparent border-none" />
+                                <i data-lucide="calendar" class="h-5 w-5 text-black ml-2"></i>
+                </div>
+            </div>
+        </div>
+                </div>
+
+                
+                <button type="submit" class="w-full font-bold py-3 rounded-lg text-lg shadow-2xl transition duration-150 mt-6" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'" onmouseout="this.style.backgroundColor='#BDEB29'">
+                    <i data-lucide="search" class="inline h-5 w-5 mr-2"></i>
+                    SEARCH TRAINS
+                </button>
+            </form>
+    </div>
+</section>
+
+    
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16" style="background-color: #030304;">
+        <div class="flex justify-between items-end mb-8">
+            <h2 class="text-3xl font-bold" style="color: #FFFFFF;">TOP TRAVEL DESTINATIONS</h2>
+            <a href="#" class="font-medium transition duration-150 hidden sm:block" style="color: #BDEB29;" onmouseover="this.style.color='#8CA43F'" onmouseout="this.style.color='#BDEB29'">View All</a>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            <a href="#" class="destination-card block relative h-64 w-full rounded-xl overflow-hidden shadow-lg">
+                <img src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=600&h=400&fit=crop" alt="Trincomalee Beach" class="absolute inset-0 w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 p-6 text-white z-10">
+                    <h3 class="text-2xl font-bold" style="color: #FFFFFF;">Trincomalee</h3>
+                    <p class="text-lg" style="color: #FFFFFF;">From <span class="font-extrabold" style="color: #BDEB29;">LKR 350</span></p>
+                </div>
+            </a>
+            
+            <a href="#" class="destination-card block relative h-64 w-full rounded-xl overflow-hidden shadow-lg">
+                <img src="/images/route-colombo-kandy.jpg" alt="Kandy City" class="absolute inset-0 w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 p-6 text-white z-10">
+                    <h3 class="text-2xl font-bold">Kandy</h3>
+                    <p class="text-lg">From <span class="font-extrabold text-[#BDEB29]">LKR 300</span></p>
+                </div>
+            </a>
+            
+            <a href="#" class="destination-card block relative h-64 w-full rounded-xl overflow-hidden shadow-lg">
+                <img src="/images/route-kandy-ella.jpg" alt="Ella City" class="absolute inset-0 w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 p-6 text-white z-10">
+                    <h3 class="text-2xl font-bold">Ella</h3>
+                    <p class="text-lg">From <span class="font-extrabold text-[#BDEB29]">LKR 450</span></p>
+                </div>
+            </a>
+            
+            <a href="#" class="destination-card block relative h-64 w-full rounded-xl overflow-hidden shadow-lg">
+                <img src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1c/86/ab/e8/st-clair-s-falls.jpg?w=900&h=-1&s=1" alt="St. Clair Falls, Nuwara Eliya" class="absolute inset-0 w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 p-6 text-white z-10">
+                    <h3 class="text-2xl font-bold">Nuwara Eliya</h3>
+                    <p class="text-lg">From <span class="font-extrabold text-[#BDEB29]">LKR 400</span></p>
+                </div>
+            </a>
+            
+            <a href="#" class="destination-card block relative h-64 w-full rounded-xl overflow-hidden shadow-lg">
+                <img src="/images/route-colombogalle.jpg" alt="Galle City" class="absolute inset-0 w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 p-6 text-white z-10">
+                    <h3 class="text-2xl font-bold">Galle</h3>
+                    <p class="text-lg">From <span class="font-extrabold text-[#BDEB29]">LKR 200</span></p>
+                </div>
+            </a>
+            
+            <a href="#" class="destination-card block relative h-64 w-full rounded-xl overflow-hidden shadow-lg">
+                <img src="https://www.vacationindia.com/wp-content/uploads/2022/09/26-Nallur-Kandaswamy-Kovil-temple-jaffna.jpg" alt="Nallur Kandaswamy Kovil Temple, Jaffna" class="absolute inset-0 w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 p-6 text-white z-10">
+                    <h3 class="text-2xl font-bold">Jaffna</h3>
+                    <p class="text-lg">From <span class="font-extrabold text-[#BDEB29]">LKR 600</span></p>
+                    </div>
+            </a>
+                </div>
+</section>
+
+    
+
+    
+    <section class="bg-[#BDEB29] py-16 mt-16 overflow-hidden relative">
+        
+        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="flex justify-between items-center mb-12">
+                <h2 class="text-3xl font-bold text-white">E-TICKETS ADVANTAGES</h2>
+                <button class="bg-white hover:bg-gray-100 text-[#BDEB29] font-medium py-2 px-6 rounded-lg shadow-md transition duration-150">Learn More</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10 text-center text-white">
+                
+                <div class="p-6 rounded-xl">
+                    <i data-lucide="scan-face" class="h-16 w-16 mx-auto mb-4 text-white p-3 border-2 border-white rounded-full"></i>
+                    <h3 class="text-xl font-bold mb-2">Convenience</h3>
+                    <p class="text-sm text-[#FFFFFF]">Book, manage, and use your tickets directly from your mobile device anytime, anywhere.</p>
+            </div>
+                
+                <div class="p-6 rounded-xl">
+                    <i data-lucide="ticket" class="h-16 w-16 mx-auto mb-4 text-white p-3 border-2 border-white rounded-full"></i>
+                    <h3 class="text-xl font-bold mb-2">Security</h3>
+                    <p class="text-sm text-[#FFFFFF]">Secure digital transactions and reduced risk of lost or damaged paper tickets.</p>
+            </div>
+                
+                <div class="p-6 rounded-xl">
+                    <i data-lucide="globe" class="h-16 w-16 mx-auto mb-4 text-white p-3 border-2 border-white rounded-full"></i>
+                    <h3 class="text-xl font-bold mb-2">Accessibility</h3>
+                    <p class="text-sm text-[#FFFFFF]">Easy access to information about routes, stations, and real-time updates globally.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+    
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8  py-16">
+        <h2 class="text-3xl font-bold text-center text-gray-900 mb-10">CUSTOMER TESTIMONIALS</h2>
+        
+        <div class="testimonial-carousel flex gap-8 p-4 no-scrollbar lg:justify-center">
+            
+            <div class="testimonial-item bg-white p-8 rounded-xl shadow-xl border border-gray-100 max-w-sm mx-auto flex-shrink-0 lg:w-1/3">
+                <p class="text-gray-600 italic mb-6">"Super easy to book my train tickets online! No more waiting in long queues at the station. Everything worked smoothly and I got my e-ticket instantly"</p>
+                <div class="flex items-center">
+                    <img src="https://placehold.co/60x60/f59e0b/ffffff?text=JN" alt="Jane Doe" class="h-12 w-12 rounded-full mr-4 object-cover">
+                    <div>
+                        <p class="font-bold text-gray-800">Nimal Perera</p>
+                        <p class="text-sm text-gray-500">Kandy</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="testimonial-item bg-white p-8 rounded-xl shadow-xl border border-gray-100 max-w-sm mx-auto flex-shrink-0 lg:w-1/3">
+                <p class="text-gray-600 italic mb-6">“I really like how simple the site is to use. I could check all train schedules and seat availability in seconds. Highly recommend for local travelers!”</p>
+                <div class="flex items-center">
+                    <img src="https://placehold.co/60x60/10b981/ffffff?text=MK" alt="Mark King" class="h-12 w-12 rounded-full mr-4 object-cover">
+                    <div>
+                        <p class="font-bold text-gray-800">Tharushi</p>
+                        <p class="text-sm text-gray-500">Ratnapura</p>
+        </div>
+            </div>
+            </div>
+            
+            <div class="testimonial-item bg-white p-8 rounded-xl shadow-xl border border-gray-100 max-w-sm mx-auto flex-shrink-0 lg:w-1/3">
+                <p class="text-gray-600 italic mb-6">“I visited Sri Lanka recently and used this website to book my train from Ella to Colombo. The process was quick and clear — perfect for tourists too!”</p>
+                <div class="flex items-center">
+                    <img src="https://placehold.co/60x60/1d4ed8/ffffff?text=AC" alt="Alex Chen" class="h-12 w-12 rounded-full mr-4 object-cover">
+                    <div>
+                        <p class="font-bold text-gray-800">John M.</p>
+                        <p class="text-sm text-gray-500">UK</p>
+            </div>
+            </div>
+                </div>
+    </div>
+        
+        <div class="flex justify-center mt-6 space-x-2">
+            <span class="h-2 w-2 bg-[#BDEB29] rounded-full"></span>
+            <span class="h-2 w-2 bg-black rounded-full cursor-pointer"></span>
+            <span class="h-2 w-2 bg-black rounded-full cursor-pointer"></span>
+    </div>
+</section>
+
+
+    <footer style="background-color: #030304; color: #FFFFFF;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-2 md:grid-cols-4 gap-10">
+            
+            <div>
+                <a href="/" class="flex items-center space-x-2 text-xl font-bold mb-4" style="color: #FFFFFF;">
+                    <i data-lucide="train-front" class="h-6 w-6" style="color: #BDEB29;"></i>
+                    <span>RailLink</span>
+                </a>
+                <p class="text-sm" style="color: #848484;">Your trusted partner for seamless rail travel across Sri Lanka.</p>
+            </div>
+
+            
+            <div>
+                <h4 class="text-lg font-semibold mb-4" style="color: #BDEB29;">Menu</h4>
+                <ul class="space-y-2 text-sm" style="color: #848484;">
+                    <li><a href="/" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Home</a></li>
+                    <li><a href="/dashboard" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Dashboard</a></li>
+                    <li><a href="/search-trains" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Search Trains</a></li>
+                    <li><a href="/help" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Help</a></li>
+                </ul>
+            </div>
+
+            
+            <div>
+                <h4 class="text-lg font-semibold mb-4" style="color: #BDEB29;">Contact US</h4>
+                <ul class="space-y-2 text-sm" style="color: #848484;">
+                    <li class="flex items-center"><i data-lucide="mail" class="h-4 w-4 mr-2"></i> info@raillink.com</li>
+                    <li class="flex items-center"><i data-lucide="phone" class="h-4 w-4 mr-2"></i> +94 11 123-4567</li>
+                    <li class="flex items-start"><i data-lucide="map-pin" class="h-4 w-4 mr-2 mt-1"></i> SLIIT Malabe Campus, New Kandy Rd, Malabe 10115</li>
+                </ul>
+            </div>
+
+            
+            <div>
+                <h4 class="text-lg font-semibold mb-4" style="color: #BDEB29;">Follow US</h4>
+                <div class="flex space-x-4 mb-6">
+                    <a href="#" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#848484'"><i data-lucide="facebook" class="h-6 w-6"></i></a>
+                    <a href="#" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#848484'"><i data-lucide="twitter" class="h-6 w-6"></i></a>
+                    <a href="#" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#848484'"><i data-lucide="linkedin" class="h-6 w-6"></i></a>
+                    <a href="#" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#BDEB29'" onmouseout="this.style.color='#848484'"><i data-lucide="instagram" class="h-6 w-6"></i></a>
+                </div>
+                <h4 class="text-lg font-semibold mb-2" style="color: #BDEB29;">Newsletter</h4>
+                <div class="flex">
+                    <input type="email" placeholder="Your Email" class="p-2 rounded-l-lg focus:outline-none w-full" style="background-color: #18181D; color: #FFFFFF; border: 1px solid #848484;">
+                    <button class="p-2 rounded-r-lg transition duration-150" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'" onmouseout="this.style.backgroundColor='#BDEB29'"><i data-lucide="send" class="h-5 w-5"></i></button>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="border-t py-4 text-center text-sm" style="border-color: #18181D; color: #848484;">
+            ©2025-Y2-S1-MLB-B9G1-06 RailLink. All Rights Reserved.
+    </div>
+</footer>
+
+<script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Handle swapping 'From' and 'To' stations
+        document.getElementById('swap-route-btn').addEventListener('click', function() {
+            const fromSelect = document.getElementById('fromStation');
+            const toSelect = document.getElementById('toStation');
+            
+            const fromValue = fromSelect.value;
+            fromSelect.value = toSelect.value;
+            toSelect.value = fromValue;
+        });
+
+        // Return trip toggle functionality
+        document.getElementById('returnToggle').addEventListener('change', function() {
+            const returnDateSection = document.getElementById('returnDateSection');
+            const returnDateInput = document.getElementById('returnDate');
+            
+            if (this.checked) {
+                returnDateSection.classList.remove('hidden');
+                returnDateInput.required = true;
+                // Small delay to ensure smooth transition
+                setTimeout(() => {
+                    returnDateInput.focus();
+                }, 300);
+            } else {
+                returnDateSection.classList.add('hidden');
+                returnDateInput.required = false;
+                returnDateInput.value = '';
+            }
+        });
+
+        // Set default date to today
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('date');
+            if (dateInput && !dateInput.value) {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                dateInput.value = `${year}-${month}-${day}`;
+            }
+        });
+
+</script>
+</body>
+</html>

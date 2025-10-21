@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Help - RailLink</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #030304;
+            color: #FFFFFF;
+        }
+        
+        .help-card {
+            background-color: rgba(24, 24, 29, 0.8);
+            border: 1px solid #18181D;
+        }
+        
+        .contact-card {
+            background: linear-gradient(135deg, rgba(189, 235, 41, 0.1), rgba(140, 164, 63, 0.1));
+            border: 1px solid rgba(189, 235, 41, 0.2);
+        }
+    </style>
+</head>
+<body>
+    
+    <header style="background-color: rgba(24, 24, 29, 0.9);" class="fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                
+                <a href="/" class="flex items-center space-x-2 text-xl font-bold" style="color: #FFFFFF;">
+                    <i data-lucide="train-front" class="h-6 w-6" style="color: #BDEB29;"></i>
+                    <span>RailLink</span>
+                </a>
+                
+                
+                <nav class="hidden md:flex space-x-8">
+                    <a href="/" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Home</a>
+                    <a href="/dashboard" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Dashboard</a>
+                    <a href="/search-trains" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Search Trains</a>
+                    <a href="/help" class="transition duration-150" style="color: #BDEB29;">Help</a>
+                </nav>
+                
+                
+                <div class="flex items-center space-x-4">
+                    <a href="/profile" class="px-4 py-2 rounded-lg font-semibold transition duration-150" style="color: #848484; border: 1px solid #848484;" onmouseover="this.style.color='#FFFFFF'; this.style.borderColor='#FFFFFF'" onmouseout="this.style.color='#848484'; this.style.borderColor='#848484'">
+                        <i data-lucide="user" class="inline h-4 w-4 mr-2"></i>
+                        Profile
+                    </a>
+                    <a href="/logout" class="px-4 py-2 rounded-lg font-semibold transition duration-150" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'; this.style.color='#FFFFFF'" onmouseout="this.style.backgroundColor='#BDEB29'; this.style.color='#030304'">
+                        <i data-lucide="log-out" class="inline h-4 w-4 mr-2"></i>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    
+    <div class="pt-20 min-h-screen" style="background-color: #030304;">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <div class="text-center mb-12">
+                <div class="flex justify-center mb-4">
+                    <div class="p-3 rounded-full" style="background-color: rgba(189, 235, 41, 0.1);">
+                        <i data-lucide="help-circle" class="h-8 w-8" style="color: #BDEB29;"></i>
+                    </div>
+                </div>
+                <h1 class="text-4xl font-bold mb-2" style="color: #FFFFFF;">Help & Support</h1>
+                <p class="text-lg" style="color: #848484;">Get help with RailLink and find answers to common questions</p>
+            </div>
+
+            
+            <div class="help-card p-8 rounded-xl mb-8">
+                <h2 class="text-2xl font-semibold mb-4" style="color: #FFFFFF;">
+                    <i data-lucide="info" class="inline h-6 w-6 mr-2" style="color: #BDEB29;"></i>
+                    About RailLink
+                </h2>
+                <p class="text-lg leading-relaxed" style="color: #848484;">
+                    RailLink is a modern train scheduling and booking platform designed to make Sri Lankan rail travel simple, secure, and delightful. 
+                    We connect passengers with reliable train services across the island, providing real-time schedules, easy booking, and comprehensive travel information.
+                </p>
+            </div>
+
+            
+            <div class="contact-card p-8 rounded-xl mb-8">
+                <h2 class="text-2xl font-semibold mb-6" style="color: #FFFFFF;">
+                    <i data-lucide="phone" class="inline h-6 w-6 mr-2" style="color: #BDEB29;"></i>
+                    Contact Us
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="p-3 rounded-full mx-auto mb-3" style="background-color: rgba(189, 235, 41, 0.1); width: fit-content;">
+                            <i data-lucide="mail" class="h-6 w-6" style="color: #BDEB29;"></i>
+                        </div>
+                        <h3 class="font-semibold mb-2" style="color: #FFFFFF;">Email</h3>
+                        <p class="text-sm" style="color: #848484;">support@raillink.com</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="p-3 rounded-full mx-auto mb-3" style="background-color: rgba(189, 235, 41, 0.1); width: fit-content;">
+                            <i data-lucide="phone" class="h-6 w-6" style="color: #BDEB29;"></i>
+                        </div>
+                        <h3 class="font-semibold mb-2" style="color: #FFFFFF;">Phone</h3>
+                        <p class="text-sm" style="color: #848484;">+94 11 123 4567</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="p-3 rounded-full mx-auto mb-3" style="background-color: rgba(189, 235, 41, 0.1); width: fit-content;">
+                            <i data-lucide="map-pin" class="h-6 w-6" style="color: #BDEB29;"></i>
+                        </div>
+                        <h3 class="font-semibold mb-2" style="color: #FFFFFF;">Address</h3>
+                        <p class="text-sm" style="color: #848484;">SLIIT, Malabe, Sri Lanka</p>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="help-card p-8 rounded-xl">
+                <h2 class="text-2xl font-semibold mb-6" style="color: #FFFFFF;">
+                    <i data-lucide="help-circle" class="inline h-6 w-6 mr-2" style="color: #BDEB29;"></i>
+                    Frequently Asked Questions
+                </h2>
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2" style="color: #FFFFFF;">How do I book a train ticket?</h3>
+                        <p class="text-sm" style="color: #848484;">Simply search for trains using our search form, select your preferred schedule, and complete the booking process with your passenger details.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2" style="color: #FFFFFF;">Can I cancel my booking?</h3>
+                        <p class="text-sm" style="color: #848484;">Yes, you can cancel your booking from the "My Bookings" section, provided it's not too close to the departure time.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2" style="color: #FFFFFF;">How do I change my password?</h3>
+                        <p class="text-sm" style="color: #848484;">Go to your profile page and use the "Change Password" section to update your password securely.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2" style="color: #FFFFFF;">What if I have technical issues?</h3>
+                        <p class="text-sm" style="color: #848484;">Contact our support team via email or phone, and we'll help you resolve any technical problems quickly.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html> 

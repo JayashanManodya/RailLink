@@ -296,14 +296,104 @@ public class BookingController {
         }
     }
     @GetMapping("/my-bookings")
-    public String myBookings(Model model) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        User user = userService.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        List<Booking> bookings = bookingService.findBookingsByUser(user.getId());
-        model.addAttribute("bookings", bookings);
-        return "my-bookings";
+    public String myBookings(@RequestParam(required = false, defaultValue = "bookingDate") String sortBy,
+                           @RequestParam(required = false, defaultValue = "desc") String sortOrder,
+                           @RequestParam(required = false) String statusFilter,
+                           @RequestParam(required = false) String trainFilter,
+                           @RequestParam(required = false) String routeFilter,
+                           Model model) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String username = auth.getName();
+            User user = userService.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            List<Booking> bookings = bookingService.findBookingsByUser(user.getId());
+            
+            // Apply filters
+            if (statusFilter != null && !statusFilter.trim().isEmpty()) {
+                bookings = bookings.stream()
+                        .filter(b -> b.getStatus().equalsIgnoreCase(statusFilter.trim()))
+                        .collect(java.util.stream.Collectors.toList());
+            }
+            
+            if (trainFilter != null && !trainFilter.trim().isEmpty()) {
+                String filter = trainFilter.toLowerCase().trim();
+                bookings = bookings.stream()
+                        .filter(b -> b.getSchedule().getTrain().getName().toLowerCase().contains(filter))
+                        .collect(java.util.stream.Collectors.toList());
+            }
+            
+            if (routeFilter != null && !routeFilter.trim().isEmpty()) {
+                String filter = routeFilter.toLowerCase().trim();
+                bookings = bookings.stream()
+                        .filter(b -> b.getSchedule().getRoute().getName().toLowerCase().contains(filter))
+                        .collect(java.util.stream.Collectors.toList());
+            }
+            
+            // Apply sorting
+            switch (sortBy.toLowerCase()) {
+                case "bookingdate":
+                    bookings.sort((b1, b2) -> {
+                        int result = b1.getBookingDate().compareTo(b2.getBookingDate());
+                        return "desc".equalsIgnoreCase(sortOrder) ? -result : result;
+                    });
+                    break;
+                case "departuredate":
+                    bookings.sort((b1, b2) -> {
+                        int result = b1.getSchedule().getDepartureDate().compareTo(b2.getSchedule().getDepartureDate());
+                        return "desc".equalsIgnoreCase(sortOrder) ? -result : result;
+                    });
+                    break;
+                case "train":
+                    bookings.sort((b1, b2) -> {
+                        int result = b1.getSchedule().getTrain().getName().compareToIgnoreCase(b2.getSchedule().getTrain().getName());
+                        return "desc".equalsIgnoreCase(sortOrder) ? -result : result;
+                    });
+                    break;
+                case "route":
+                    bookings.sort((b1, b2) -> {
+                        int result = b1.getSchedule().getRoute().getName().compareToIgnoreCase(b2.getSchedule().getRoute().getName());
+                        return "desc".equalsIgnoreCase(sortOrder) ? -result : result;
+                    });
+                    break;
+                case "status":
+                    bookings.sort((b1, b2) -> {
+                        int result = b1.getStatus().compareToIgnoreCase(b2.getStatus());
+                        return "desc".equalsIgnoreCase(sortOrder) ? -result : result;
+                    });
+                    break;
+                case "fare":
+                    bookings.sort((b1, b2) -> {
+                        java.math.BigDecimal fare1 = b1.getFare() != null ? b1.getFare() : java.math.BigDecimal.ZERO;
+                        java.math.BigDecimal fare2 = b2.getFare() != null ? b2.getFare() : java.math.BigDecimal.ZERO;
+                        int result = fare1.compareTo(fare2);
+                        return "desc".equalsIgnoreCase(sortOrder) ? -result : result;
+                    });
+                    break;
+                default:
+                    // Default sorting by booking date
+                    bookings.sort((b1, b2) -> {
+                        int result = b1.getBookingDate().compareTo(b2.getBookingDate());
+                        return "desc".equalsIgnoreCase(sortOrder) ? -result : result;
+                    });
+            }
+            
+            model.addAttribute("bookings", bookings);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("sortOrder", sortOrder);
+            model.addAttribute("statusFilter", statusFilter);
+            model.addAttribute("trainFilter", trainFilter);
+            model.addAttribute("routeFilter", routeFilter);
+            
+            return "my-bookings";
+        } catch (Exception e) {
+            System.err.println("Error loading my bookings: " + e.getMessage());
+            e.printStackTrace();
+            model.addAttribute("error", "Unable to load bookings. Please try again later.");
+            model.addAttribute("bookings", new java.util.ArrayList<Booking>());
+            return "my-bookings";
+        }
     }
     @GetMapping("/bookings/cancel/{bookingId}")
     public String cancelBooking(@PathVariable Long bookingId, RedirectAttributes redirectAttributes) {
@@ -373,17 +463,43 @@ public class BookingController {
         return "ticket";
     }
     @GetMapping("/bookings/{bookingId}/ticket/pdf")
-    public ResponseEntity<byte[]> downloadTicketPdf(@PathVariable Long bookingId) {
+    public ResponseEntity<byte[]> downloadTicketPdf(@PathVariable Long bookingId,
+                                                   @RequestParam(required = false, defaultValue = "1") Integer count) {
         try {
-            Booking booking = bookingService.findBookingById(bookingId)
+            Booking mainBooking = bookingService.findBookingById(bookingId)
                     .orElseThrow(() -> new RuntimeException("Booking not found"));
-            byte[] ticketPdf = pdfService.generateTicketPdf(booking);
+
+            byte[] bytes;
+            String filename;
+
+            if (count != null && count > 1) {
+                // Build related bookings list similar to booking-success
+                List<Booking> relatedBookings = new ArrayList<>();
+                List<Booking> userBookings = bookingService.findBookingsByUser(mainBooking.getUser().getId());
+                java.time.LocalDateTime bookingTime = mainBooking.getBookingDate();
+                for (Booking b : userBookings) {
+                    if (b.getSchedule().getId().equals(mainBooking.getSchedule().getId()) &&
+                        b.getTicketClass() != null &&
+                        b.getTicketClass().equals(mainBooking.getTicketClass()) &&
+                        "CONFIRMED".equals(b.getStatus()) &&
+                        Math.abs(java.time.Duration.between(b.getBookingDate(), bookingTime).toSeconds()) < 60) {
+                        relatedBookings.add(b);
+                    }
+                }
+                if (relatedBookings.isEmpty()) {
+                    relatedBookings.add(mainBooking);
+                }
+                bytes = pdfService.generateTicketsPdf(relatedBookings);
+                filename = "tickets_" + bookingId + "_" + relatedBookings.size() + ".txt";
+            } else {
+                bytes = pdfService.generateTicketPdf(mainBooking);
+                filename = "ticket_" + bookingId + ".txt";
+            }
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-            headers.setContentDispositionFormData("attachment", "ticket_" + bookingId + ".txt");
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .body(ticketPdf);
+            headers.setContentDispositionFormData("attachment", filename);
+            return ResponseEntity.ok().headers(headers).body(bytes);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }

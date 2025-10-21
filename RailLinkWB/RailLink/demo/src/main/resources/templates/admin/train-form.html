@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Train Form - RailLink</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #030304;
+            color: #FFFFFF;
+        }
+        
+        .admin-card {
+            background-color: rgba(24, 24, 29, 0.8);
+            border: 1px solid #18181D;
+        }
+        
+        .form-input {
+            background-color: rgba(24, 24, 29, 0.8);
+            border: 1px solid #848484;
+            color: #FFFFFF;
+        }
+        
+        .form-input:focus {
+            border-color: #BDEB29;
+            box-shadow: 0 0 0 3px rgba(189, 235, 41, 0.1);
+        }
+        
+        .btn-primary {
+            background-color: #BDEB29;
+            color: #030304;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #8CA43F;
+            color: #FFFFFF;
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid #848484;
+            color: #848484;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #FFFFFF;
+            color: #FFFFFF;
+        }
+    </style>
+  </head>
+<body>
+    
+    <header style="background-color: rgba(24, 24, 29, 0.9);" class="fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                
+                <a href="/" class="flex items-center space-x-2 text-xl font-bold" style="color: #FFFFFF;">
+                    <i data-lucide="train-front" class="h-6 w-6" style="color: #BDEB29;"></i>
+                    <span>RailLink</span>
+                </a>
+                
+                
+                <nav class="hidden md:flex space-x-8">
+                    <a href="/" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Home</a>
+                    <a href="/dashboard" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Dashboard</a>
+                    <a href="/search-trains" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Search Trains</a>
+                    <a href="/help" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Help</a>
+                </nav>
+                
+                
+                <div class="flex items-center space-x-4">
+                    <a href="/admin/dashboard" class="px-4 py-2 rounded-lg font-semibold transition duration-150" style="color: #BDEB29; border: 1px solid #BDEB29;" onmouseover="this.style.color='#FFFFFF'; this.style.borderColor='#FFFFFF'" onmouseout="this.style.color='#BDEB29'; this.style.borderColor='#BDEB29'">
+                        <i data-lucide="settings" class="inline h-4 w-4 mr-2"></i>
+                        Admin
+                    </a>
+                    <a href="/logout" class="px-4 py-2 rounded-lg font-semibold transition duration-150" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'; this.style.color='#FFFFFF'" onmouseout="this.style.backgroundColor='#BDEB29'; this.style.color='#030304'">
+                        <i data-lucide="log-out" class="inline h-4 w-4 mr-2"></i>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    
+    <div class="pt-20 min-h-screen" style="background-color: #030304;">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2" style="color: #FFFFFF;">
+                        <i data-lucide="train" class="inline h-8 w-8 mr-3" style="color: #BDEB29;"></i>
+                    <span th:text="${train.id == null ? 'Add New Train' : 'Edit Train'}">Train Form</span>
+                </h1>
+                    <p class="text-lg" style="color: #848484;">Create or edit train information</p>
+                </div>
+                <a href="/admin/trains" class="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                    <i data-lucide="arrow-left" class="h-4 w-4 mr-2"></i>
+                    Back to Trains
+                </a>
+            </div>
+
+            
+            <div class="admin-card p-8 rounded-xl">
+            <form th:action="@{/admin/trains/save}" th:object="${train}" method="post">
+                <input type="hidden" th:field="*{id}" />
+
+                    
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-6" style="color: #FFFFFF;">
+                            <i data-lucide="info" class="inline h-5 w-5 mr-2" style="color: #BDEB29;"></i>
+                            Train Information
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                    <i data-lucide="train" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                    Train Name
+                                </label>
+                                <input type="text" th:field="*{name}" class="form-input w-full px-4 py-3 rounded-lg" 
+                                       placeholder="Enter train name" required />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                    <i data-lucide="info" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                    Status
+                                </label>
+                                <select th:field="*{status}" class="form-input w-full px-4 py-3 rounded-lg" required>
+                                    <option value="">Select Status</option>
+                                    <option value="ACTIVE">Active</option>
+                                    <option value="MAINTENANCE">Maintenance</option>
+                                    <option value="OUT_OF_SERVICE">Out of Service</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        
+                        <div class="mt-8">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-lg font-semibold" style="color: #FFFFFF;">
+                                    <i data-lucide="layers" class="inline h-5 w-5 mr-2" style="color: #BDEB29;"></i>
+                                    Train Classes & Seat Capacities
+                                </h4>
+                                <button type="button" id="addClassBtn" class="btn-secondary px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center">
+                                    <i data-lucide="plus" class="h-4 w-4 mr-2"></i>
+                                    Add Class
+                                </button>
+                            </div>
+                            
+                            <div id="classesContainer" class="space-y-4">
+                                
+                                <div th:if="${existingClasses != null and !existingClasses.isEmpty()}" th:each="classEntry : ${existingClasses}">
+                                    <div class="class-row p-4 rounded-lg" style="background-color: rgba(24, 24, 29, 0.6); border: 1px solid #18181D;">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                                    <i data-lucide="layers" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                                    Class Name
+                                                </label>
+                                                <input type="text" name="classNames" class="form-input w-full px-4 py-3 rounded-lg" 
+                                                       th:value="${classEntry.key}" required />
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                                    <i data-lucide="users" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                                    Seat Capacity
+                                                </label>
+                                                <input type="number" name="classCapacities" class="form-input w-full px-4 py-3 rounded-lg" 
+                                                       th:value="${classEntry.value}" required min="1" />
+                                            </div>
+                                        </div>
+                                        <button type="button" class="remove-class-btn mt-3 px-3 py-1 rounded text-sm" style="background-color: #ef4444; color: #FFFFFF;">
+                                            <i data-lucide="trash-2" class="inline h-3 w-3 mr-1"></i>
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                
+                                <div th:if="${existingClasses == null or existingClasses.isEmpty()}">
+                                    <div class="class-row p-4 rounded-lg" style="background-color: rgba(24, 24, 29, 0.6); border: 1px solid #18181D;">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                                    <i data-lucide="layers" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                                    Class Name
+                                                </label>
+                                                <input type="text" name="classNames" class="form-input w-full px-4 py-3 rounded-lg" 
+                                                       placeholder="e.g., First Class" value="First Class" required />
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                                    <i data-lucide="users" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                                    Seat Capacity
+                                                </label>
+                                                <input type="number" name="classCapacities" class="form-input w-full px-4 py-3 rounded-lg" 
+                                                       placeholder="Enter seat capacity" value="50" required min="1" />
+                                            </div>
+                                        </div>
+                                        <button type="button" class="remove-class-btn mt-3 px-3 py-1 rounded text-sm" style="background-color: #ef4444; color: #FFFFFF; display: none;">
+                                            <i data-lucide="trash-2" class="inline h-3 w-3 mr-1"></i>
+                                            Remove
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="class-row p-4 rounded-lg" style="background-color: rgba(24, 24, 29, 0.6); border: 1px solid #18181D;">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                                    <i data-lucide="layers" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                                    Class Name
+                                                </label>
+                                                <input type="text" name="classNames" class="form-input w-full px-4 py-3 rounded-lg" 
+                                                       placeholder="e.g., Second Class" value="Second Class" required />
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                                    <i data-lucide="users" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                                    Seat Capacity
+                                                </label>
+                                                <input type="number" name="classCapacities" class="form-input w-full px-4 py-3 rounded-lg" 
+                                                       placeholder="Enter seat capacity" value="100" required min="1" />
+                                            </div>
+                                        </div>
+                                        <button type="button" class="remove-class-btn mt-3 px-3 py-1 rounded text-sm" style="background-color: #ef4444; color: #FFFFFF;">
+                                            <i data-lucide="trash-2" class="inline h-3 w-3 mr-1"></i>
+                                            Remove
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="class-row p-4 rounded-lg" style="background-color: rgba(24, 24, 29, 0.6); border: 1px solid #18181D;">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                                    <i data-lucide="layers" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                                    Class Name
+                                                </label>
+                                                <input type="text" name="classNames" class="form-input w-full px-4 py-3 rounded-lg" 
+                                                       placeholder="e.g., Third Class" value="Third Class" required />
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                                    <i data-lucide="users" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                                    Seat Capacity
+                                                </label>
+                                                <input type="number" name="classCapacities" class="form-input w-full px-4 py-3 rounded-lg" 
+                                                       placeholder="Enter seat capacity" value="200" required min="1" />
+                                            </div>
+                                        </div>
+                                        <button type="button" class="remove-class-btn mt-3 px-3 py-1 rounded text-sm" style="background-color: #ef4444; color: #FFFFFF;">
+                                            <i data-lucide="trash-2" class="inline h-3 w-3 mr-1"></i>
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            
+                            <div class="mt-4 p-4 rounded-lg" style="background-color: rgba(189, 235, 41, 0.05); border: 1px solid rgba(189, 235, 41, 0.2);">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <i data-lucide="users" class="h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                        <span class="text-sm font-semibold" style="color: #FFFFFF;">Total Capacity</span>
+                                    </div>
+                                    <span id="totalCapacity" class="text-lg font-bold" style="color: #BDEB29;">350</span>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+
+                    
+                    <div class="flex gap-4">
+                        <button type="submit" class="btn-primary px-8 py-3 rounded-lg font-semibold inline-flex items-center">
+                            <i data-lucide="save" class="h-4 w-4 mr-2"></i>
+                            Save Train
+                        </button>
+                        <a href="/admin/trains" class="btn-secondary px-8 py-3 rounded-lg font-semibold inline-flex items-center">
+                            <i data-lucide="x" class="h-4 w-4 mr-2"></i>
+                            Cancel
+                        </a>
+                </div>
+            </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Train classes management
+        document.addEventListener('DOMContentLoaded', function() {
+            const addClassBtn = document.getElementById('addClassBtn');
+            const classesContainer = document.getElementById('classesContainer');
+            const totalCapacitySpan = document.getElementById('totalCapacity');
+            
+            // Add new class functionality
+            addClassBtn.addEventListener('click', function() {
+                const classRow = document.createElement('div');
+                classRow.className = 'class-row p-4 rounded-lg';
+                classRow.style.cssText = 'background-color: rgba(24, 24, 29, 0.6); border: 1px solid #18181D;';
+                
+                classRow.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                <i data-lucide="layers" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                Class Name
+                            </label>
+                            <input type="text" name="classNames" class="form-input w-full px-4 py-3 rounded-lg" 
+                                   placeholder="e.g., Business Class" required />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2" style="color: #FFFFFF;">
+                                <i data-lucide="users" class="inline h-4 w-4 mr-2" style="color: #BDEB29;"></i>
+                                Seat Capacity
+                            </label>
+                            <input type="number" name="classCapacities" class="form-input w-full px-4 py-3 rounded-lg" 
+                                   placeholder="Enter seat capacity" required min="1" />
+                        </div>
+                    </div>
+                    <button type="button" class="remove-class-btn mt-3 px-3 py-1 rounded text-sm" style="background-color: #ef4444; color: #FFFFFF;">
+                        <i data-lucide="trash-2" class="inline h-3 w-3 mr-1"></i>
+                        Remove
+                    </button>
+                `;
+                
+                classesContainer.appendChild(classRow);
+                updateRemoveButtons();
+                updateTotalCapacity();
+                
+                // Re-initialize Lucide icons for the new elements
+                lucide.createIcons();
+            });
+            
+            // Remove class functionality
+            classesContainer.addEventListener('click', function(e) {
+                if (e.target.closest('.remove-class-btn')) {
+                    const classRow = e.target.closest('.class-row');
+                    classRow.remove();
+                    updateRemoveButtons();
+                    updateTotalCapacity();
+                }
+            });
+            
+            // Update total capacity when inputs change
+            classesContainer.addEventListener('input', function(e) {
+                if (e.target.name === 'classCapacities') {
+                    updateTotalCapacity();
+                }
+            });
+            
+            // Function to update remove buttons visibility
+            function updateRemoveButtons() {
+                const classRows = classesContainer.querySelectorAll('.class-row');
+                classRows.forEach((row, index) => {
+                    const removeBtn = row.querySelector('.remove-class-btn');
+                    if (classRows.length <= 1) {
+                        removeBtn.style.display = 'none';
+                    } else {
+                        removeBtn.style.display = 'inline-flex';
+                    }
+                });
+            }
+            
+            // Function to calculate and update total capacity
+            function updateTotalCapacity() {
+                const capacityInputs = classesContainer.querySelectorAll('input[name="classCapacities"]');
+                let total = 0;
+                
+                capacityInputs.forEach(input => {
+                    const value = parseInt(input.value) || 0;
+                    total += value;
+                });
+                
+                totalCapacitySpan.textContent = total;
+            }
+            
+            // Initialize
+            updateRemoveButtons();
+            updateTotalCapacity();
+        });
+    </script>
+</body>
+</html>

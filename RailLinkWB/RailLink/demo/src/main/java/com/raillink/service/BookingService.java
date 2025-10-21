@@ -68,22 +68,14 @@ public class BookingService {
         return bookingRepository.save(booking);
     }
     public void deleteBooking(Long bookingId) {
-        System.out.println("=== BOOKING SERVICE DELETE CALLED ===");
-        System.out.println("Attempting to delete booking with ID: " + bookingId);
-        boolean exists = bookingRepository.existsById(bookingId);
-        System.out.println("Booking exists in repository: " + exists);
-        if (!exists) {
-            System.out.println("Booking not found in repository with ID: " + bookingId);
+        if (!bookingRepository.existsById(bookingId)) {
             throw new RuntimeException("Booking not found with ID: " + bookingId);
         }
-        System.out.println("Proceeding to delete booking from repository...");
         bookingRepository.deleteById(bookingId);
-        System.out.println("Booking successfully deleted from repository");
     }
     
     public void deleteBookingsByUser(User user) {
         List<Booking> userBookings = bookingRepository.findByUserId(user.getId());
-        System.out.println("Deleting " + userBookings.size() + " bookings for user: " + user.getUsername());
         for (Booking booking : userBookings) {
             bookingRepository.deleteById(booking.getId());
         }

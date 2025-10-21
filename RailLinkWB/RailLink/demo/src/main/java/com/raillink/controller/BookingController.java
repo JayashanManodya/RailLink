@@ -1,7 +1,6 @@
 package com.raillink.controller;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -10,9 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -60,8 +57,42 @@ public class BookingController {
                                @RequestParam(required = false) Long routeId,
                                @RequestParam(required = false, defaultValue = "ANY") String timeMode,
                                @RequestParam(required = false) String timeEnd,
-                               @RequestParam(required = false, defaultValue = "1") Integer passengers,
                                Model model) {
+        
+        // Validate date - prevent searching for past dates
+        if (date != null && !date.isBlank()) {
+            try {
+                java.time.LocalDate searchDate = java.time.LocalDate.parse(date);
+                java.time.LocalDate today = java.time.LocalDate.now();
+                
+                if (searchDate.isBefore(today)) {
+                    model.addAttribute("error", "You cannot search for trains on past dates. Please select today or a future date.");
+                    model.addAttribute("schedules", new java.util.ArrayList<Schedule>());
+                    model.addAttribute("fromStation", fromStation);
+                    model.addAttribute("toStation", toStation);
+                    model.addAttribute("date", date);
+                    model.addAttribute("dateString", date);
+                    model.addAttribute("time", time);
+                    model.addAttribute("routeId", routeId);
+                    model.addAttribute("timeMode", timeMode);
+                    model.addAttribute("timeEnd", timeEnd);
+                    return "search-results";
+                }
+            } catch (Exception e) {
+                model.addAttribute("error", "Invalid date format. Please select a valid date.");
+                model.addAttribute("schedules", new java.util.ArrayList<Schedule>());
+                model.addAttribute("fromStation", fromStation);
+                model.addAttribute("toStation", toStation);
+                model.addAttribute("date", date);
+                model.addAttribute("dateString", date);
+                model.addAttribute("time", time);
+                model.addAttribute("routeId", routeId);
+                model.addAttribute("timeMode", timeMode);
+                model.addAttribute("timeEnd", timeEnd);
+                return "search-results";
+            }
+        }
+        
         List<Schedule> schedules;
         if (routeId != null) {
             schedules = scheduleService.searchByRouteAndDate(routeId, date);
@@ -124,7 +155,6 @@ public class BookingController {
         model.addAttribute("routeId", routeId);
         model.addAttribute("timeMode", timeMode);
         model.addAttribute("timeEnd", timeEnd);
-        model.addAttribute("passengers", passengers);
         return "search-results";
     }
     @GetMapping("/bookings/new/{scheduleId}")
@@ -295,6 +325,36 @@ public class BookingController {
             return "redirect:/trains/search";
         }
     }
+    @GetMapping("/bookings/{bookingId}")
+    public String viewBookingDetails(@PathVariable Long bookingId, Model model) {
+        try {
+            Booking booking = bookingService.findBookingById(bookingId)
+                    .orElseThrow(() -> new RuntimeException("Booking not found"));
+            
+            // Check if the current user owns this booking
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated()) {
+                String username = auth.getName();
+                User currentUser = userService.findByUsername(username)
+                        .orElseThrow(() -> new RuntimeException("User not found"));
+                
+                if (!booking.getUser().getId().equals(currentUser.getId())) {
+                    model.addAttribute("error", "You are not authorized to view this booking.");
+                    return "error";
+                }
+            } else {
+                model.addAttribute("error", "You must be logged in to view booking details.");
+                return "error";
+            }
+            
+            model.addAttribute("booking", booking);
+            return "booking-details";
+        } catch (Exception e) {
+            model.addAttribute("error", "Booking not found or you don't have permission to view it.");
+            return "error";
+        }
+    }
+
     @GetMapping("/my-bookings")
     public String myBookings(@RequestParam(required = false, defaultValue = "bookingDate") String sortBy,
                            @RequestParam(required = false, defaultValue = "desc") String sortOrder,
@@ -388,8 +448,6 @@ public class BookingController {
             
             return "my-bookings";
         } catch (Exception e) {
-            System.err.println("Error loading my bookings: " + e.getMessage());
-            e.printStackTrace();
             model.addAttribute("error", "Unable to load bookings. Please try again later.");
             model.addAttribute("bookings", new java.util.ArrayList<Booking>());
             return "my-bookings";
@@ -398,10 +456,9 @@ public class BookingController {
     @GetMapping("/bookings/cancel/{bookingId}")
     public String cancelBooking(@PathVariable Long bookingId, RedirectAttributes redirectAttributes) {
         try {
-            Booking cancelled = bookingService.cancelBooking(bookingId);
+            bookingService.cancelBooking(bookingId);
             redirectAttributes.addFlashAttribute("success", "Booking cancelled successfully");
         } catch (Exception e) {
-            System.err.println("Error cancelling booking: " + e.getMessage());
             redirectAttributes.addFlashAttribute("error", "Error cancelling booking: " + e.getMessage());
         }
         return "redirect:/my-bookings";
@@ -416,7 +473,6 @@ public class BookingController {
             model.addAttribute("availableSchedules", availableSchedules);
             return "edit-booking";
         } catch (Exception e) {
-            System.err.println("Error loading edit booking page: " + e.getMessage());
             return "redirect:/my-bookings";
         }
     }
@@ -439,7 +495,6 @@ public class BookingController {
             bookingService.saveBooking(booking);
             redirectAttributes.addFlashAttribute("success", "Booking updated successfully");
         } catch (Exception e) {
-            System.err.println("Error updating booking: " + e.getMessage());
             redirectAttributes.addFlashAttribute("error", "Error updating booking: " + e.getMessage());
         }
         return "redirect:/my-bookings";
@@ -450,7 +505,6 @@ public class BookingController {
             bookingService.deleteBooking(bookingId);
             redirectAttributes.addFlashAttribute("success", "Booking deleted permanently from database");
         } catch (Exception e) {
-            System.err.println("Error deleting booking: " + e.getMessage());
             redirectAttributes.addFlashAttribute("error", "Error deleting booking: " + e.getMessage());
         }
         return "redirect:/my-bookings";
@@ -502,79 +556,6 @@ public class BookingController {
             return ResponseEntity.ok().headers(headers).body(bytes);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
-        }
-    }
-    @GetMapping("/api/bookings/search")
-    @ResponseBody
-    public List<Schedule> searchSchedules(@RequestParam(required = false) String startStation,
-                                         @RequestParam(required = false) String endStation,
-                                          @RequestParam(required = false) String date,
-                                          @RequestParam(required = false) String time,
-                                         @RequestParam(required = false) Long routeId,
-                                         @RequestParam(required = false, defaultValue = "ANY") String timeMode,
-                                         @RequestParam(required = false) String timeEnd) {
-        try {
-            java.util.List<Schedule> res = (routeId != null)
-                    ? scheduleService.searchByRouteAndDate(routeId, date)
-                    : scheduleService.searchByStationsAndDate(startStation, endStation, date);
-            final String mode = timeMode != null ? timeMode.toUpperCase() : "ANY";
-            if (!"ANY".equals(mode)) {
-                try {
-                    final java.time.LocalTime parsedStart = (time != null && !time.isBlank()) ? java.time.LocalTime.parse(time) : null;
-                    final java.time.LocalTime parsedEnd = (timeEnd != null && !timeEnd.isBlank()) ? java.time.LocalTime.parse(timeEnd) : null;
-                    final java.time.LocalTime aroundMin = ("AROUND".equals(mode) && parsedStart != null) ? parsedStart.minusMinutes(30) : null;
-                    final java.time.LocalTime aroundMax = ("AROUND".equals(mode) && parsedStart != null) ? parsedStart.plusMinutes(30) : null;
-                    java.time.LocalTime tmpStart = parsedStart;
-                    java.time.LocalTime tmpEnd = parsedEnd;
-                    if ("RANGE".equals(mode) && tmpStart != null && tmpEnd != null && tmpEnd.isBefore(tmpStart)) {
-                        java.time.LocalTime t = tmpStart; tmpStart = tmpEnd; tmpEnd = t;
-                    }
-                    final java.time.LocalTime rangeStart = tmpStart;
-                    final java.time.LocalTime rangeEnd = tmpEnd;
-                    res = res.stream().filter(s -> {
-                        java.time.LocalTime dep = s.getDepartureDate().toLocalTime();
-                        switch (mode) {
-                            case "EXACT":
-                                return parsedStart != null && dep.getHour() == parsedStart.getHour() && dep.getMinute() == parsedStart.getMinute();
-                            case "AROUND":
-                                if (aroundMin == null || aroundMax == null) return true;
-                                return !dep.isBefore(aroundMin) && !dep.isAfter(aroundMax);
-                            case "RANGE":
-                                if (rangeStart == null || rangeEnd == null) return true;
-                                return !dep.isBefore(rangeStart) && !dep.isAfter(rangeEnd);
-                            default:
-                                return true;
-                        }
-                    }).toList();
-                } catch (Exception ignored) {}
-            } else if (time != null && !time.isBlank()) {
-                try {
-                    java.time.LocalTime t = java.time.LocalTime.parse(time);
-                    res = res.stream().filter(s -> s.getDepartureDate().toLocalTime().getHour() == t.getHour()
-                            && s.getDepartureDate().toLocalTime().getMinute() == t.getMinute()).toList();
-                } catch (Exception ignored) {}
-            }
-            return res;
-        } catch (Exception e) {
-            return new ArrayList<>();
-        }
-    }
-    @PostMapping("/api/bookings/")
-    @ResponseBody
-    public Map<String, Object> createBookingApi(@RequestBody Map<String, Object> request) {
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String username = auth.getName();
-            User user = userService.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            Long scheduleId = Long.valueOf(request.get("scheduleId").toString());
-            String seatNumber = request.get("seatNumber").toString();
-            Schedule schedule = scheduleService.findScheduleById(scheduleId)
-                    .orElseThrow(() -> new RuntimeException("Schedule not found"));
-            Booking booking = bookingService.createBooking(user, schedule, seatNumber);
-            return Map.of("message", "Booking created successfully", "bookingId", booking.getId());
-        } catch (Exception e) {
-            return Map.of("error", e.getMessage());
         }
     }
 } 

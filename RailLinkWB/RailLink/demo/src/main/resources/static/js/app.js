@@ -1,8 +1,7 @@
-// RailLink Application JavaScript
 
-// Smooth scrolling for anchor links
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Add smooth scrolling to all links
+
     const links = document.querySelectorAll('a[href^="#"]');
     links.forEach(link => {
         link.addEventListener('click', function(e) {
@@ -17,7 +16,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Add loading animations to buttons
     const buttons = document.querySelectorAll('.btn');
     buttons.forEach(button => {
         button.addEventListener('click', function() {
@@ -34,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Add form validation
     const forms = document.querySelectorAll('form');
     forms.forEach(form => {
         form.addEventListener('submit', function(e) {
@@ -57,7 +54,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Add input focus effects
     const inputs = document.querySelectorAll('.form-control');
     inputs.forEach(input => {
         input.addEventListener('focus', function() {
@@ -70,7 +66,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Notification system
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
@@ -81,8 +76,7 @@ function showNotification(message, type = 'info') {
     `;
     
     document.body.appendChild(notification);
-    
-    // Auto remove after 5 seconds
+
     setTimeout(() => {
         if (notification.parentElement) {
             notification.remove();
@@ -90,7 +84,6 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-// Modal management
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -107,7 +100,6 @@ function closeModal(modalId) {
     }
 }
 
-// Close modal when clicking outside
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('modal')) {
         e.target.style.display = 'none';
@@ -115,7 +107,6 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Add CSS for notifications
 const notificationStyles = `
     .notification {
         position: fixed;
@@ -186,7 +177,6 @@ const notificationStyles = `
     }
 `;
 
-// Inject styles
 const styleSheet = document.createElement('style');
 styleSheet.textContent = notificationStyles;
 document.head.appendChild(styleSheet); 

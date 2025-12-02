@@ -1,14 +1,10 @@
-package com.raillink.repository; 
-
-import java.util.Optional; 
-import org.springframework.data.jpa.repository.JpaRepository; 
-import org.springframework.stereotype.Repository; 
-import com.raillink.model.Route; 
-
+package com.raillink.repository;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import com.raillink.model.Route;
 @Repository // indha interface database repository nu indicate pannudhu
 public interface RouteRepository extends JpaRepository<Route, Long> {
-
-    Optional<Route> findByName(String name); 
-
-    Optional<Route> findByRouteCode(String routeCode); 
+    Optional<Route> findByName(String name);
+    Optional<Route> findByRouteCode(String routeCode);
 }

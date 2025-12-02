@@ -83,6 +83,174 @@
             opacity: 1;
             pointer-events: auto;
         }
+
+        /* Chat assistant widget */
+        #rail-chat-widget {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 50;
+        }
+
+        #rail-chat-widget .chat-toggle {
+            background-color: #BDEB29;
+            color: #030304;
+            border: none;
+            border-radius: 999px;
+            font-weight: 600;
+            padding: 0.85rem 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #rail-chat-widget .chat-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        #rail-chat-widget .chat-panel {
+            width: 340px;
+            max-height: 520px;
+            background-color: #111116;
+            border-radius: 18px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        #rail-chat-widget .chat-panel-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        #rail-chat-widget .chat-panel-header h4 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        #rail-chat-widget .chat-panel-body {
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+
+        #rail-chat-widget .chat-bubble {
+            padding: 0.75rem 1rem;
+            border-radius: 16px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            position: relative;
+        }
+
+        #rail-chat-widget .chat-bubble-user {
+            background: linear-gradient(135deg, #BDEB29, #8CA43F);
+            color: #030304;
+            border-bottom-right-radius: 4px;
+            align-self: flex-end;
+        }
+
+        #rail-chat-widget .chat-bubble-agent {
+            background-color: rgba(255, 255, 255, 0.07);
+            border-bottom-left-radius: 4px;
+            color: #F1F1F1;
+            align-self: flex-start;
+        }
+
+        #rail-chat-widget .chat-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.85rem 1.25rem 0;
+        }
+
+        #rail-chat-widget .chat-suggestion {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: transparent;
+            color: #FFFFFF;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        #rail-chat-widget .chat-suggestion:hover {
+            background-color: rgba(189, 235, 41, 0.15);
+            color: #BDEB29;
+        }
+
+        #rail-chat-widget form {
+            padding: 1rem 1.25rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        #rail-chat-widget textarea {
+            width: 100%;
+            min-height: 70px;
+            resize: none;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            color: #FFFFFF;
+            padding: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        #rail-chat-widget textarea:focus {
+            outline: none;
+            border-color: #BDEB29;
+        }
+
+        #rail-chat-widget .chat-send {
+            background-color: #BDEB29;
+            color: #030304;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 0.65rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        #rail-chat-widget .chat-error {
+            background-color: rgba(220, 38, 38, 0.15);
+            color: #fecaca;
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            margin: 0 1.25rem;
+            font-size: 0.75rem;
+        }
+
+        #rail-chat-widget .chat-status {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        #rail-chat-widget .chat-status-busy {
+            color: #BDEB29;
+        }
+
+        @media (max-width: 640px) {
+            #rail-chat-widget {
+                right: 16px;
+                left: 16px;
+            }
+
+            #rail-chat-widget .chat-panel {
+                width: auto;
+            }
+        }
     </style>
 </head>
 <body class="text-black">
@@ -373,6 +541,35 @@
 </section>
 
 
+    <!-- Chat assistant widget -->
+    <div id="rail-chat-widget" class="chat-widget">
+        <div class="chat-panel hidden" data-chat-panel>
+            <div class="chat-panel-header flex items-start justify-between text-white">
+                <div>
+                    <h4>RailLink Assistant</h4>
+                    <p class="chat-status" data-chat-status>Assistant is online</p>
+                </div>
+                <button class="text-white/70 hover:text-white" data-chat-close aria-label="Close assistant">
+                    ✕
+                </button>
+            </div>
+            <div class="chat-panel-body" data-chat-messages>
+                <!-- Messages rendered dynamically -->
+            </div>
+            <div class="chat-suggestions hidden" data-chat-suggestions></div>
+            <div class="chat-error hidden" data-chat-error></div>
+            <form data-chat-form>
+                <textarea placeholder="Ask about your bookings, routes, or schedules..." data-chat-input></textarea>
+                <button type="submit" class="chat-send">
+                    <span>Send</span>
+                </button>
+            </form>
+        </div>
+        <button class="chat-toggle" data-chat-toggle aria-expanded="false">
+            <span>Need help?</span>
+        </button>
+    </div>
+
     <footer style="background-color: #030304; color: #FFFFFF;">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-2 md:grid-cols-4 gap-10">
             
@@ -428,6 +625,7 @@
     </div>
 </footer>
 
+<script th:src="@{/js/chat-widget.js}"></script>
 <script>
         // Initialize Lucide Icons
         lucide.createIcons();

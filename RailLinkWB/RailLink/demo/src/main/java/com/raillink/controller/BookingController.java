@@ -59,7 +59,7 @@ public class BookingController {
                                @RequestParam(required = false) String timeEnd,
                                Model model) {
         
-        // Validate date - prevent searching for past dates
+        // Date Validtion
         if (date != null && !date.isBlank()) {
             try {
                 java.time.LocalDate searchDate = java.time.LocalDate.parse(date);
@@ -99,45 +99,6 @@ public class BookingController {
         } else {
             schedules = scheduleService.searchByStationsAndDate(fromStation, toStation, date);
         }
-        final String mode = timeMode != null ? timeMode.toUpperCase() : "ANY";
-        if (!"ANY".equals(mode)) {
-            try {
-                final java.time.LocalTime parsedStart = (time != null && !time.isBlank()) ? java.time.LocalTime.parse(time) : null;
-                final java.time.LocalTime parsedEnd = (timeEnd != null && !timeEnd.isBlank()) ? java.time.LocalTime.parse(timeEnd) : null;
-                final java.time.LocalTime aroundMin = ("AROUND".equals(mode) && parsedStart != null) ? parsedStart.minusMinutes(30) : null;
-                final java.time.LocalTime aroundMax = ("AROUND".equals(mode) && parsedStart != null) ? parsedStart.plusMinutes(30) : null;
-                java.time.LocalTime tmpStart = parsedStart;
-                java.time.LocalTime tmpEnd = parsedEnd;
-                if ("RANGE".equals(mode) && tmpStart != null && tmpEnd != null && tmpEnd.isBefore(tmpStart)) {
-                    java.time.LocalTime t = tmpStart; tmpStart = tmpEnd; tmpEnd = t;
-                }
-                final java.time.LocalTime rangeStart = tmpStart;
-                final java.time.LocalTime rangeEnd = tmpEnd;
-                schedules = schedules.stream().filter(s -> {
-                    java.time.LocalTime dep = s.getDepartureDate().toLocalTime();
-                    switch (mode) {
-                        case "EXACT":
-                            return parsedStart != null && dep.getHour() == parsedStart.getHour() && dep.getMinute() == parsedStart.getMinute();
-                        case "AROUND":
-                            if (aroundMin == null || aroundMax == null) return true;
-                            return !dep.isBefore(aroundMin) && !dep.isAfter(aroundMax);
-                        case "RANGE":
-                            if (rangeStart == null || rangeEnd == null) return true;
-                            return !dep.isBefore(rangeStart) && !dep.isAfter(rangeEnd);
-                        default:
-                            return true;
-                    }
-                }).toList();
-            } catch (Exception ignored) {}
-        } else if (time != null && !time.isBlank()) {
-            try {
-                java.time.LocalTime t = java.time.LocalTime.parse(time);
-                schedules = schedules.stream()
-                        .filter(s -> s.getDepartureDate().toLocalTime().getHour() == t.getHour()
-                                && s.getDepartureDate().toLocalTime().getMinute() == t.getMinute())
-                        .toList();
-            } catch (Exception ignored) {}
-        }
         model.addAttribute("schedules", schedules);
         model.addAttribute("fromStation", fromStation);
         model.addAttribute("toStation", toStation);
@@ -151,10 +112,7 @@ public class BookingController {
         }
         model.addAttribute("date", searchDate != null ? searchDate : date);
         model.addAttribute("dateString", date);
-        model.addAttribute("time", time);
         model.addAttribute("routeId", routeId);
-        model.addAttribute("timeMode", timeMode);
-        model.addAttribute("timeEnd", timeEnd);
         return "search-results";
     }
     @GetMapping("/bookings/new/{scheduleId}")
@@ -163,16 +121,9 @@ public class BookingController {
         Schedule schedule = scheduleService.findScheduleById(scheduleId)
                 .orElseThrow(() -> new RuntimeException("Schedule not found"));
         
-        // Get train classes and capacities
         java.util.Map<String, Integer> trainClasses = schedule.getTrain().getClasses();
-        
-        // Get schedule pricing
         java.util.Map<String, java.math.BigDecimal> schedulePricing = schedule.getPricing();
-        
-        // Get available seats per class
         java.util.Map<String, Integer> availablePerClass = bookingService.getAvailableSeatsPerClass(schedule);
-        
-        // Build combined class information with pricing, capacity, and availability
         java.util.Map<String, java.util.Map<String, Object>> classInfo = new java.util.LinkedHashMap<>();
         if (trainClasses != null && !trainClasses.isEmpty()) {
             for (java.util.Map.Entry<String, Integer> entry : trainClasses.entrySet()) {
@@ -182,29 +133,12 @@ public class BookingController {
                 java.util.Map<String, Object> info = new java.util.HashMap<>();
                 info.put("capacity", capacity);
                 
-                // Add available seats for this class
                 Integer available = availablePerClass.getOrDefault(className, capacity);
                 info.put("available", available);
-                
-                // Get price from schedule pricing, or use default
-                java.math.BigDecimal price;
+
+                java.math.BigDecimal price = null;
                 if (schedulePricing != null && schedulePricing.containsKey(className)) {
                     price = schedulePricing.get(className);
-                } else {
-                    // Default pricing based on class name
-                    switch (className.toLowerCase()) {
-                        case "first class":
-                            price = java.math.BigDecimal.valueOf(1500.00);
-                            break;
-                        case "second class":
-                            price = java.math.BigDecimal.valueOf(1000.00);
-                            break;
-                        case "third class":
-                            price = java.math.BigDecimal.valueOf(500.00);
-                            break;
-                        default:
-                            price = java.math.BigDecimal.valueOf(25.00);
-                    }
                 }
                 info.put("price", price);
                 
@@ -235,25 +169,15 @@ public class BookingController {
                     .orElseThrow(() -> new RuntimeException("User not found"));
             Schedule schedule = scheduleService.findScheduleById(scheduleId)
                     .orElseThrow(() -> new RuntimeException("Schedule not found"));
-            
-            // Handle bookings - single ticket booking only
+
             List<Long> bookingIds = new ArrayList<>();
-            
-            // Handle multiple seat bookings (for backward compatibility)
-            if (seatNumbers != null && !seatNumbers.isEmpty()) {
-                for (String seat : seatNumbers) {
-                    if (seat != null && !seat.trim().isEmpty()) {
-                        Booking booking = bookingService.createBooking(user, schedule, seat.trim(), ticketClass);
-                        bookingIds.add(booking.getId());
-                    }
-                }
-            } 
-            // Single seat booking
-            else if (seatNumber != null && !seatNumber.trim().isEmpty()) {
+
+            // seat booking
+            if (seatNumber != null && !seatNumber.trim().isEmpty()) {
                 Booking booking = bookingService.createBooking(user, schedule, seatNumber, ticketClass);
                 bookingIds.add(booking.getId());
             } else {
-                // Auto-assign first available seat if no seat specified
+
                 List<Integer> availableSeats = bookingService.getAvailableSeatsForSchedule(schedule);
                 if (availableSeats.isEmpty()) {
                     throw new RuntimeException("No seats available for this schedule");
@@ -266,8 +190,7 @@ public class BookingController {
             if (bookingIds.isEmpty()) {
                 throw new RuntimeException("No bookings were created");
             }
-            
-            // Redirect to booking success page
+
             return "redirect:/booking-success?bookingId=" + bookingIds.get(0) + "&count=1";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -282,10 +205,8 @@ public class BookingController {
             Booking mainBooking = bookingService.findBookingById(bookingId)
                     .orElseThrow(() -> new RuntimeException("Booking not found"));
             
-            // Get all bookings for this user, schedule, and class made at the same time
             List<Booking> relatedBookings = new ArrayList<>();
             if (count > 1) {
-                // Find bookings made around the same time (within 1 minute)
                 List<Booking> userBookings = bookingService.findBookingsByUser(mainBooking.getUser().getId());
                 java.time.LocalDateTime bookingTime = mainBooking.getBookingDate();
                 
@@ -301,8 +222,7 @@ public class BookingController {
             } else {
                 relatedBookings.add(mainBooking);
             }
-            
-            // Calculate total fare and collect seat numbers
+
             java.math.BigDecimal totalFare = java.math.BigDecimal.ZERO;
             List<String> seatNumbers = new ArrayList<>();
             for (Booking booking : relatedBookings) {
@@ -330,8 +250,7 @@ public class BookingController {
         try {
             Booking booking = bookingService.findBookingById(bookingId)
                     .orElseThrow(() -> new RuntimeException("Booking not found"));
-            
-            // Check if the current user owns this booking
+
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth != null && auth.isAuthenticated()) {
                 String username = auth.getName();
@@ -370,7 +289,6 @@ public class BookingController {
             
             List<Booking> bookings = bookingService.findBookingsByUser(user.getId());
             
-            // Apply filters
             if (statusFilter != null && !statusFilter.trim().isEmpty()) {
                 bookings = bookings.stream()
                         .filter(b -> b.getStatus().equalsIgnoreCase(statusFilter.trim()))
@@ -391,7 +309,6 @@ public class BookingController {
                         .collect(java.util.stream.Collectors.toList());
             }
             
-            // Apply sorting
             switch (sortBy.toLowerCase()) {
                 case "bookingdate":
                     bookings.sort((b1, b2) -> {
@@ -432,7 +349,7 @@ public class BookingController {
                     });
                     break;
                 default:
-                    // Default sorting by booking date
+                    // Default sort
                     bookings.sort((b1, b2) -> {
                         int result = b1.getBookingDate().compareTo(b2.getBookingDate());
                         return "desc".equalsIgnoreCase(sortOrder) ? -result : result;
@@ -527,7 +444,6 @@ public class BookingController {
             String filename;
 
             if (count != null && count > 1) {
-                // Build related bookings list similar to booking-success
                 List<Booking> relatedBookings = new ArrayList<>();
                 List<Booking> userBookings = bookingService.findBookingsByUser(mainBooking.getUser().getId());
                 java.time.LocalDateTime bookingTime = mainBooking.getBookingDate();

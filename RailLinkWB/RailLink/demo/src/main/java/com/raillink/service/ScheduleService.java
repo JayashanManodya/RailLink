@@ -20,6 +20,19 @@ public class ScheduleService {
             fromStation.isBlank() || toStation.isBlank() || dateIso.isBlank()) {
             return java.util.Collections.emptyList();
         }
+        
+        // Validate date - prevent searching for past dates
+        try {
+            java.time.LocalDate searchDate = java.time.LocalDate.parse(dateIso);
+            java.time.LocalDate today = java.time.LocalDate.now();
+            
+            if (searchDate.isBefore(today)) {
+                return java.util.Collections.emptyList(); // Return empty list for past dates
+            }
+        } catch (Exception e) {
+            return java.util.Collections.emptyList(); // Return empty list for invalid dates
+        }
+        
         LocalDateTime startOfDay = LocalDateTime.parse(dateIso + "T00:00:00");
         LocalDateTime endOfDay = LocalDateTime.parse(dateIso + "T23:59:59");
         String exactRouteName = (fromStation + " to " + toStation).trim();
@@ -54,6 +67,19 @@ public class ScheduleService {
         if (routeId == null || dateIso == null || dateIso.isBlank()) {
             return scheduleRepository.findAll();
         }
+        
+        // Validate date - prevent searching for past dates
+        try {
+            java.time.LocalDate searchDate = java.time.LocalDate.parse(dateIso);
+            java.time.LocalDate today = java.time.LocalDate.now();
+            
+            if (searchDate.isBefore(today)) {
+                return java.util.Collections.emptyList(); // Return empty list for past dates
+            }
+        } catch (Exception e) {
+            return java.util.Collections.emptyList(); // Return empty list for invalid dates
+        }
+        
         LocalDateTime startOfDay = LocalDateTime.parse(dateIso + "T00:00:00");
         LocalDateTime endOfDay = LocalDateTime.parse(dateIso + "T23:59:59");
         List<Schedule> daySchedules = scheduleRepository.findByRoute_IdAndDepartureDateBetween(routeId, startOfDay, endOfDay);

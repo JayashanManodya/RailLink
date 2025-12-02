@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Error - RailLink</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #030304;
+            color: #FFFFFF;
+        }
+        
+        .error-card {
+            background-color: rgba(24, 24, 29, 0.8);
+            border: 1px solid #18181D;
+        }
+        
+        .btn-primary {
+            background-color: #BDEB29;
+            color: #030304;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #8CA43F;
+            color: #FFFFFF;
+        }
+    </style>
+</head>
+<body>
+    
+    <header style="background-color: rgba(24, 24, 29, 0.9);" class="fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <a href="/" class="flex items-center space-x-2 text-xl font-bold" style="color: #FFFFFF;">
+                    <i data-lucide="train-front" class="h-6 w-6" style="color: #BDEB29;"></i>
+                    <span>RailLink</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    
+    <div class="pt-20 min-h-screen flex items-center justify-center" style="background-color: #030304;">
+        <div class="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="error-card p-8 rounded-xl text-center">
+                <i data-lucide="alert-triangle" class="h-16 w-16 mx-auto mb-4" style="color: #ef4444;"></i>
+                <h1 class="text-2xl font-bold mb-2" style="color: #FFFFFF;">Oops! Something went wrong</h1>
+                <p class="mb-6" style="color: #848484;" th:text="${error != null ? error : 'An unexpected error occurred. Please try again.'}">Error message</p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <a href="/dashboard" class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                        <i data-lucide="home" class="h-4 w-4 mr-2"></i>
+                        Go to Dashboard
+                    </a>
+                    <a href="/my-bookings" class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                        <i data-lucide="ticket" class="h-4 w-4 mr-2"></i>
+                        My Bookings
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+
+
+
+

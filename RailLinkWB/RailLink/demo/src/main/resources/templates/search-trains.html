@@ -180,6 +180,57 @@
         // Initialize Lucide icons
         lucide.createIcons();
 
+        // Set minimum date to today
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('date');
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.setAttribute('min', today);
+            dateInput.value = today; // Set default to today
+            
+            // Add validation for past dates
+            dateInput.addEventListener('change', function() {
+                const selectedDate = new Date(this.value);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Reset time to start of day
+                
+                if (selectedDate < today) {
+                    alert('You cannot search for trains on past dates. Please select today or a future date.');
+                    this.value = today.toISOString().split('T')[0];
+                }
+            });
+            
+            // Form submission validation
+            document.querySelector('form').addEventListener('submit', function(e) {
+                const dateInput = document.getElementById('date');
+                const selectedDate = new Date(dateInput.value);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                if (selectedDate < today) {
+                    e.preventDefault();
+                    alert('You cannot search for trains on past dates. Please select today or a future date.');
+                    dateInput.focus();
+                    return false;
+                }
+                
+                // Additional validation for required fields
+                const fromStation = document.getElementById('fromStation').value;
+                const toStation = document.getElementById('toStation').value;
+                
+                if (!fromStation || !toStation) {
+                    e.preventDefault();
+                    alert('Please select both departure and arrival stations.');
+                    return false;
+                }
+                
+                if (fromStation === toStation) {
+                    e.preventDefault();
+                    alert('Departure and arrival stations cannot be the same.');
+                    return false;
+                }
+            });
+        });
+
     </script>
 </body>
 </html>

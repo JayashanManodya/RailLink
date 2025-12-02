@@ -150,6 +150,101 @@
                 </div>
             </div>
 
+            <!-- Filter and Sort Controls -->
+            <div th:if="${bookings != null and !#lists.isEmpty(bookings)}" class="mb-8 p-6 rounded-xl" style="background-color: rgba(24, 24, 29, 0.8); border: 1px solid #18181D;">
+                <h3 class="text-lg font-semibold mb-4" style="color: #FFFFFF;">
+                    <i data-lucide="filter" class="inline h-5 w-5 mr-2" style="color: #BDEB29;"></i>
+                    Filter & Sort Bookings
+                </h3>
+                
+                <form method="get" action="/my-bookings" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Sort By -->
+                        <div>
+                            <label for="sortBy" class="block text-sm font-medium mb-2" style="color: #FFFFFF;">Sort By</label>
+                            <select id="sortBy" name="sortBy" class="w-full px-3 py-2 rounded-lg border border-gray-600 bg-gray-800 text-white focus:border-[#BDEB29] focus:ring-2 focus:ring-[#BDEB29] focus:outline-none">
+                                <option value="bookingDate" th:selected="${sortBy == 'bookingDate'}">Booking Date</option>
+                                <option value="departureDate" th:selected="${sortBy == 'departureDate'}">Departure Date</option>
+                                <option value="train" th:selected="${sortBy == 'train'}">Train Name</option>
+                                <option value="route" th:selected="${sortBy == 'route'}">Route</option>
+                                <option value="status" th:selected="${sortBy == 'status'}">Status</option>
+                                <option value="fare" th:selected="${sortBy == 'fare'}">Fare</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Sort Order -->
+                        <div>
+                            <label for="sortOrder" class="block text-sm font-medium mb-2" style="color: #FFFFFF;">Order</label>
+                            <select id="sortOrder" name="sortOrder" class="w-full px-3 py-2 rounded-lg border border-gray-600 bg-gray-800 text-white focus:border-[#BDEB29] focus:ring-2 focus:ring-[#BDEB29] focus:outline-none">
+                                <option value="desc" th:selected="${sortOrder == 'desc'}">Newest First</option>
+                                <option value="asc" th:selected="${sortOrder == 'asc'}">Oldest First</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Status Filter -->
+                        <div>
+                            <label for="statusFilter" class="block text-sm font-medium mb-2" style="color: #FFFFFF;">Filter by Status</label>
+                            <select id="statusFilter" name="statusFilter" class="w-full px-3 py-2 rounded-lg border border-gray-600 bg-gray-800 text-white focus:border-[#BDEB29] focus:ring-2 focus:ring-[#BDEB29] focus:outline-none">
+                                <option value="">All Statuses</option>
+                                <option value="CONFIRMED" th:selected="${statusFilter == 'CONFIRMED'}">Confirmed</option>
+                                <option value="CANCELLED" th:selected="${statusFilter == 'CANCELLED'}">Cancelled</option>
+                                <option value="PENDING" th:selected="${statusFilter == 'PENDING'}">Pending</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Train Filter -->
+                        <div>
+                            <label for="trainFilter" class="block text-sm font-medium mb-2" style="color: #FFFFFF;">Filter by Train</label>
+                            <input type="text" id="trainFilter" name="trainFilter" 
+                                   th:value="${trainFilter}" 
+                                   placeholder="Enter train name..."
+                                   class="w-full px-3 py-2 rounded-lg border border-gray-600 bg-gray-800 text-white focus:border-[#BDEB29] focus:ring-2 focus:ring-[#BDEB29] focus:outline-none">
+                        </div>
+                        
+                        <!-- Route Filter -->
+                        <div>
+                            <label for="routeFilter" class="block text-sm font-medium mb-2" style="color: #FFFFFF;">Filter by Route</label>
+                            <input type="text" id="routeFilter" name="routeFilter" 
+                                   th:value="${routeFilter}" 
+                                   placeholder="Enter route name..."
+                                   class="w-full px-3 py-2 rounded-lg border border-gray-600 bg-gray-800 text-white focus:border-[#BDEB29] focus:ring-2 focus:ring-[#BDEB29] focus:outline-none">
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex items-end space-x-2">
+                            <button type="submit" class="btn-primary px-4 py-2 rounded-lg font-semibold inline-flex items-center">
+                                <i data-lucide="search" class="h-4 w-4 mr-2"></i>
+                                Apply Filters
+                            </button>
+                            <a href="/my-bookings" class="btn-secondary px-4 py-2 rounded-lg font-semibold inline-flex items-center">
+                                <i data-lucide="refresh-cw" class="h-4 w-4 mr-2"></i>
+                                Reset
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results Summary -->
+            <div th:if="${bookings != null and !#lists.isEmpty(bookings)}" class="mb-4">
+                <p class="text-sm" style="color: #848484;">
+                    Showing <span class="font-semibold" style="color: #BDEB29;" th:text="${#lists.size(bookings)}">0</span> booking(s)
+                    <span th:if="${statusFilter != null and !statusFilter.isEmpty()}" class="ml-2">
+                        filtered by status: <span class="font-semibold" style="color: #FFFFFF;" th:text="${statusFilter}">status</span>
+                    </span>
+                    <span th:if="${trainFilter != null and !trainFilter.isEmpty()}" class="ml-2">
+                        filtered by train: <span class="font-semibold" style="color: #FFFFFF;" th:text="${trainFilter}">train</span>
+                    </span>
+                    <span th:if="${routeFilter != null and !routeFilter.isEmpty()}" class="ml-2">
+                        filtered by route: <span class="font-semibold" style="color: #FFFFFF;" th:text="${routeFilter}">route</span>
+                    </span>
+                    <span class="ml-2">
+                        sorted by: <span class="font-semibold" style="color: #FFFFFF;" th:text="${sortBy}">sortBy</span> 
+                        (<span class="font-semibold" style="color: #FFFFFF;" th:text="${sortOrder == 'desc' ? 'newest first' : 'oldest first'}">order</span>)
+                    </span>
+                </p>
+            </div>
+
             
             <div th:if="${bookings != null and !#lists.isEmpty(bookings)}" class="space-y-6">
                 <div th:each="booking : ${bookings}" class="booking-card p-6 rounded-xl">
@@ -200,7 +295,7 @@
                             Booking ID: <span th:text="${booking.id}">#12345</span>
                         </div>
                         <div class="flex gap-3">
-                            <a th:href="@{/booking-success?bookingId={id}(id=${booking.id})}" class="btn-primary px-4 py-2 rounded-lg font-semibold inline-flex items-center">
+                            <a th:href="@{/bookings/{id}/ticket(id=${booking.id})}" class="btn-primary px-4 py-2 rounded-lg font-semibold inline-flex items-center">
                                 <i data-lucide="eye" class="h-4 w-4 mr-2"></i>
                                 View Ticket
                             </a>
@@ -231,10 +326,16 @@
                 <i data-lucide="ticket" class="h-16 w-16 mx-auto mb-4" style="color: #848484; opacity: 0.5;"></i>
                 <h3 class="text-xl font-semibold mb-2" style="color: #FFFFFF;">No Bookings Found</h3>
                 <p class="mb-6" style="color: #848484;">You haven't made any bookings yet. Start by searching for trains!</p>
-                <a href="/search-trains" class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
-                    <i data-lucide="search" class="h-4 w-4 mr-2"></i>
-                    Search Trains
-                </a>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="javascript:history.back()" class="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                        <i data-lucide="arrow-left" class="h-4 w-4 mr-2"></i>
+                        Go Back
+                    </a>
+                    <a href="/search-trains" class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                        <i data-lucide="search" class="h-4 w-4 mr-2"></i>
+                        Search Trains
+                    </a>
+                </div>
             </div>
         </div>
     </div>

@@ -11,10 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.raillink.model.Booking;
-import com.raillink.model.Refund;
 import com.raillink.model.Schedule;
 import com.raillink.service.BookingService;
-import com.raillink.service.RefundService;
 import com.raillink.service.ScheduleService;
 import com.raillink.service.ScheduleUpdateBroadcaster;
 @RestController
@@ -25,8 +23,6 @@ public class StaffApiController {
     private ScheduleService scheduleService;
     @Autowired
     private BookingService bookingService;
-    @Autowired
-    private RefundService refundService;
     @Autowired
     private ScheduleUpdateBroadcaster scheduleBroadcaster;
     @GetMapping("/schedules")
@@ -74,45 +70,5 @@ public class StaffApiController {
                     return ResponseEntity.ok(m);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-    @GetMapping("/refunds")
-    public ResponseEntity<java.util.List<java.util.Map<String, Object>>> listRefunds() {
-        java.util.List<Refund> list = refundService.findAll();
-        java.util.List<java.util.Map<String, Object>> dto = list.stream().map(r -> {
-            java.util.Map<String, Object> m = new java.util.HashMap<>();
-            m.put("id", r.getId());
-            m.put("amount", r.getAmount());
-            m.put("status", r.getStatus());
-            m.put("requestedAt", r.getRequestedAt());
-            m.put("processedAt", r.getProcessedAt());
-            m.put("processedBy", r.getProcessedBy());
-            try { m.put("bookingId", r.getBooking() != null ? r.getBooking().getId() : null); } catch (Exception ignore) {}
-            return m;
-        }).toList();
-        return ResponseEntity.ok(dto);
-    }
-    @GetMapping("/refunds/{id}")
-    public ResponseEntity<java.util.Map<String, Object>> getRefund(@PathVariable Long id) {
-        return refundService.findAll().stream().filter(r -> r.getId().equals(id)).findFirst()
-                .map(r -> {
-                    java.util.Map<String, Object> m = new java.util.HashMap<>();
-                    m.put("id", r.getId());
-                    m.put("amount", r.getAmount());
-                    m.put("status", r.getStatus());
-                    m.put("requestedAt", r.getRequestedAt());
-                    m.put("processedAt", r.getProcessedAt());
-                    m.put("processedBy", r.getProcessedBy());
-                    try { m.put("bookingId", r.getBooking() != null ? r.getBooking().getId() : null); } catch (Exception ignore) {}
-                    return ResponseEntity.ok(m);
-                })
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-    @PostMapping("/refunds/{id}/approve")
-    public ResponseEntity<Refund> approveRefund(@PathVariable Long id, @RequestParam String admin) {
-        return ResponseEntity.ok(refundService.approveRefund(id, admin));
-    }
-    @PostMapping("/refunds/{id}/reject")
-    public ResponseEntity<Refund> rejectRefund(@PathVariable Long id, @RequestParam String admin) {
-        return ResponseEntity.ok(refundService.rejectRefund(id, admin));
     }
 }

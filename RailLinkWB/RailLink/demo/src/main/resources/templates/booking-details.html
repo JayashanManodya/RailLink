@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Booking Details - RailLink</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #030304;
+            color: #FFFFFF;
+        }
+        
+        .details-card {
+            background-color: rgba(24, 24, 29, 0.8);
+            border: 1px solid #18181D;
+            transition: all 0.3s ease;
+        }
+        
+        .details-card:hover {
+            background-color: rgba(24, 24, 29, 0.9);
+            border-color: #BDEB29;
+        }
+        
+        .btn-primary {
+            background-color: #BDEB29;
+            color: #030304;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #8CA43F;
+            color: #FFFFFF;
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid #848484;
+            color: #848484;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #FFFFFF;
+            color: #FFFFFF;
+        }
+        
+        .btn-danger {
+            background-color: #ef4444;
+            color: #FFFFFF;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .status-confirmed {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+        
+        .status-cancelled {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        
+        .info-section {
+            background-color: rgba(189, 235, 41, 0.05);
+            border: 1px solid rgba(189, 235, 41, 0.1);
+        }
+    </style>
+</head>
+<body>
+    
+    <header style="background-color: rgba(24, 24, 29, 0.9);" class="fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                
+                <a href="/" class="flex items-center space-x-2 text-xl font-bold" style="color: #FFFFFF;">
+                    <i data-lucide="train-front" class="h-6 w-6" style="color: #BDEB29;"></i>
+                    <span>RailLink</span>
+                </a>
+                
+                
+                <nav class="hidden md:flex space-x-8">
+                    <a href="/" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Home</a>
+                    <a href="/dashboard" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Dashboard</a>
+                    <a href="/search-trains" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Search Trains</a>
+                    <a href="/my-bookings" class="transition duration-150" style="color: #BDEB29;">My Bookings</a>
+                </nav>
+                
+                
+                <div class="flex items-center space-x-4">
+                    <a href="/dashboard" sec:authorize="isAuthenticated()" class="flex items-center space-x-2 px-3 py-2 rounded-lg font-semibold transition duration-150" style="background-color: rgba(189, 235, 41, 0.1); border: 1px solid #BDEB29; color: #BDEB29;" onmouseover="this.style.backgroundColor='rgba(189, 235, 41, 0.2)'; this.style.color='#FFFFFF'" onmouseout="this.style.backgroundColor='rgba(189, 235, 41, 0.1)'; this.style.color='#BDEB29'">
+                        <i data-lucide="user-circle" class="h-5 w-5"></i>
+                        <span class="text-sm font-medium" th:text="${#authentication.name}">Username</span>
+                    </a>
+                    <form th:action="@{/logout}" method="post" class="inline">
+                        <button type="submit" class="px-4 py-2 rounded-lg font-semibold transition duration-150" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'; this.style.color='#FFFFFF'" onmouseout="this.style.backgroundColor='#BDEB29'; this.style.color='#030304'" onclick="return confirm('Are you sure you want to logout?');">
+                            <i data-lucide="log-out" class="inline h-4 w-4 mr-2"></i>
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    
+    <div class="pt-20 min-h-screen" style="background-color: #030304;">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <!-- Error Message -->
+            <div th:if="${error}" class="mb-6 p-4 rounded-lg" style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);">
+                <div class="flex items-center">
+                    <i data-lucide="alert-circle" class="h-5 w-5 mr-2" style="color: #ef4444;"></i>
+                    <span th:text="${error}" style="color: #ef4444;">Error message</span>
+                </div>
+            </div>
+
+            <!-- Booking Details -->
+            <div th:if="${booking != null}" class="space-y-6">
+                
+                <!-- Header -->
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2" style="color: #FFFFFF;">
+                            <i data-lucide="ticket" class="inline h-8 w-8 mr-3" style="color: #BDEB29;"></i>
+                            Booking Details
+                        </h1>
+                        <p class="text-lg" style="color: #848484;">Booking ID: <span th:text="${booking.id}">#12345</span></p>
+                    </div>
+                    <div class="flex gap-3">
+                        <a href="/my-bookings" class="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                            <i data-lucide="arrow-left" class="h-4 w-4 mr-2"></i>
+                            Back to Bookings
+                        </a>
+                        <a th:href="@{/bookings/{id}/ticket(id=${booking.id})}" class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                            <i data-lucide="download" class="h-4 w-4 mr-2"></i>
+                            Download Ticket
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Booking Status -->
+                <div class="details-card p-6 rounded-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold" style="color: #FFFFFF;">Booking Status</h2>
+                        <div class="status-badge status-confirmed" th:if="${booking.status == 'CONFIRMED'}">
+                            <i data-lucide="check-circle" class="inline h-3 w-3 mr-1"></i>
+                            CONFIRMED
+                        </div>
+                        <div class="status-badge status-cancelled" th:if="${booking.status == 'CANCELLED'}">
+                            <i data-lucide="x-circle" class="inline h-3 w-3 mr-1"></i>
+                            CANCELLED
+                        </div>
+                    </div>
+                    <p class="text-sm" style="color: #848484;">
+                        <i data-lucide="calendar" class="inline h-4 w-4 mr-2"></i>
+                        Booked on: <span th:text="${#temporals.format(booking.bookingDate, 'MMM dd, yyyy \'at\' HH:mm')}">Dec 25, 2024 at 10:30</span>
+                    </p>
+                </div>
+
+                <!-- Train Information -->
+                <div class="details-card p-6 rounded-xl">
+                    <h2 class="text-xl font-semibold mb-4" style="color: #FFFFFF;">Train Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-2" style="color: #BDEB29;" th:text="${booking.schedule != null && booking.schedule.train != null ? booking.schedule.train.name : 'Train Name'}">Express 101</h3>
+                            <p class="text-sm" style="color: #848484;" th:text="${booking.schedule != null && booking.schedule.route != null ? booking.schedule.route.name : 'Route Name'}">Central to North Route</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm" style="color: #848484;">Train Capacity</p>
+                            <p class="text-lg font-semibold" style="color: #FFFFFF;" th:text="${booking.schedule != null && booking.schedule.train != null ? booking.schedule.train.capacity : 'N/A'}">150 seats</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Journey Details -->
+                <div class="details-card p-6 rounded-xl">
+                    <h2 class="text-xl font-semibold mb-4" style="color: #FFFFFF;">Journey Details</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="info-section p-4 rounded-lg">
+                            <h3 class="font-semibold mb-2" style="color: #BDEB29;">Departure</h3>
+                            <p class="text-2xl font-bold" style="color: #FFFFFF;" th:if="${booking.schedule != null && booking.schedule.departureDate != null}" th:text="${#temporals.format(booking.schedule.departureDate, 'HH:mm')}">10:30</p>
+                            <p class="text-sm" style="color: #848484;" th:if="${booking.schedule != null && booking.schedule.departureDate != null}" th:text="${#temporals.format(booking.schedule.departureDate, 'MMM dd, yyyy')}">Dec 25, 2024</p>
+                        </div>
+                        <div class="info-section p-4 rounded-lg">
+                            <h3 class="font-semibold mb-2" style="color: #BDEB29;">Arrival</h3>
+                            <p class="text-2xl font-bold" style="color: #FFFFFF;" th:if="${booking.schedule != null && booking.schedule.arrivalDate != null}" th:text="${#temporals.format(booking.schedule.arrivalDate, 'HH:mm')}">12:30</p>
+                            <p class="text-sm" style="color: #848484;" th:if="${booking.schedule != null && booking.schedule.arrivalDate != null}" th:text="${#temporals.format(booking.schedule.arrivalDate, 'MMM dd, yyyy')}">Dec 25, 2024</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seat Information -->
+                <div class="details-card p-6 rounded-xl">
+                    <h2 class="text-xl font-semibold mb-4" style="color: #FFFFFF;">Seat Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <p class="text-sm" style="color: #848484;">Seat Number</p>
+                            <p class="text-xl font-semibold" style="color: #FFFFFF;" th:text="${booking.seatNumber}">12A</p>
+                        </div>
+                        <div>
+                            <p class="text-sm" style="color: #848484;">Class</p>
+                            <p class="text-xl font-semibold" style="color: #FFFFFF;" th:text="${booking.ticketClass != null ? booking.ticketClass : 'Standard'}">First Class</p>
+                        </div>
+                        <div>
+                            <p class="text-sm" style="color: #848484;">Fare</p>
+                            <p class="text-xl font-semibold" style="color: #BDEB29;" th:text="${booking.fare != null ? 'Rs. ' + #numbers.formatDecimal(booking.fare, 1, 2) : 'Rs. 0.00'}">Rs. 1,500.00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="details-card p-6 rounded-xl">
+                    <h2 class="text-xl font-semibold mb-4" style="color: #FFFFFF;">Actions</h2>
+                    <div class="flex flex-wrap gap-3">
+                        <a th:href="@{/bookings/{id}/ticket(id=${booking.id})}" class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                            <i data-lucide="download" class="h-4 w-4 mr-2"></i>
+                            Download Ticket
+                        </a>
+                        <a th:href="@{/bookings/edit/{id}(id=${booking.id})}" class="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                            <i data-lucide="edit" class="h-4 w-4 mr-2"></i>
+                            Edit Booking
+                        </a>
+                        <a th:href="@{/bookings/cancel/{id}(id=${booking.id})}" 
+                           th:if="${booking.status == 'CONFIRMED'}"
+                           class="btn-danger px-6 py-3 rounded-lg font-semibold inline-flex items-center"
+                           onclick="return confirm('Are you sure you want to cancel this booking?');">
+                            <i data-lucide="x" class="h-4 w-4 mr-2"></i>
+                            Cancel Booking
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+
+
+
+

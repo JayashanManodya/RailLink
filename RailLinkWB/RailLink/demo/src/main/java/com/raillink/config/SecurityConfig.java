@@ -26,6 +26,7 @@ public class SecurityConfig {
                 .requestMatchers("/", "/cssticket").hasRole("PASSENGER")
                 .requestMatchers("/login", "/register").permitAll()
                 .requestMatchers("/api/test/**", "/api/health").permitAll()
+                .requestMatchers("/api/chat/**").permitAll()
                 .requestMatchers("/api/sse/**").permitAll()
                 .requestMatchers("/api/admin/routes").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

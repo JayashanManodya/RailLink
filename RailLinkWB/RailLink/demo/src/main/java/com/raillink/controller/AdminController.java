@@ -13,12 +13,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.raillink.model.Refund;
 import com.raillink.model.Route;
 import com.raillink.model.Schedule;
 import com.raillink.model.Station;
 import com.raillink.model.Train;
-import com.raillink.service.RefundService;
 import com.raillink.service.RouteService;
 import com.raillink.service.ScheduleService;
 import com.raillink.service.ScheduleUpdateBroadcaster;
@@ -35,8 +33,6 @@ public class AdminController {
     private RouteService routeService;
     @Autowired
     private ScheduleService scheduleService;
-    @Autowired
-    private RefundService refundService;
     @Autowired
     private ScheduleUpdateBroadcaster scheduleBroadcaster;
     @GetMapping("/trains")
@@ -150,24 +146,4 @@ public class AdminController {
         scheduleBroadcaster.broadcastScheduleDeleted(id);
         return ResponseEntity.ok().build();
     }
-    @PostMapping("/refunds/request")
-    public ResponseEntity<Refund> requestRefund(@RequestBody Map<String, Object> request) {
-        Long bookingId = Long.valueOf(request.get("bookingId").toString());
-        java.math.BigDecimal amount = new java.math.BigDecimal(request.get("amount").toString());
-        String reason = request.getOrDefault("reason", "").toString();
-        Refund refund = refundService.requestRefund(bookingId, amount, reason);
-        return ResponseEntity.ok(refund);
-    }
-    @PostMapping("/refunds/{id}/approve")
-    public ResponseEntity<Refund> approveRefund(@PathVariable Long id, @RequestParam String admin) {
-        return ResponseEntity.ok(refundService.approveRefund(id, admin));
-    }
-    @PostMapping("/refunds/{id}/reject")
-    public ResponseEntity<Refund> rejectRefund(@PathVariable Long id, @RequestParam String admin) {
-        return ResponseEntity.ok(refundService.rejectRefund(id, admin));
-    }
-    @PostMapping("/refunds/{id}/issued")
-    public ResponseEntity<Refund> markRefundIssued(@PathVariable Long id, @RequestParam String admin) {
-        return ResponseEntity.ok(refundService.markIssued(id, admin));
-    }
-} 
+}

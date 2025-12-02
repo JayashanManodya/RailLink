@@ -17,6 +17,9 @@ public class BookingService {
     @Autowired
     private BookingRepository bookingRepository;
     
+    @Autowired
+    private N8nEmailService n8nEmailService;
+    
     public Booking createBooking(User user, Schedule schedule, String seatNumber) {
         return createBooking(user, schedule, seatNumber, null);
     }
@@ -36,7 +39,17 @@ public class BookingService {
         booking.setSchedule(schedule);
         booking.setTicketClass(ticketClass);
         booking.setFare(calculateFare(schedule, ticketClass));
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+        
+        // Send booking confirmation email via n8n (async, non-blocking)
+        try {
+            n8nEmailService.sendBookingConfirmationEmail(savedBooking);
+        } catch (Exception e) {
+            // Log error but don't fail the booking
+            System.err.println("Failed to trigger email notification: " + e.getMessage());
+        }
+        
+        return savedBooking;
     }
     public Booking cancelBooking(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
@@ -101,7 +114,7 @@ public class BookingService {
     public java.util.Map<String, Integer> getAvailableSeatsPerClass(Schedule schedule) {
         java.util.Map<String, Integer> availablePerClass = new java.util.HashMap<>();
         
-        // Get train classes and their capacities
+        // Get train classes and capacities
         java.util.Map<String, Integer> trainClasses = schedule.getTrain().getClasses();
         if (trainClasses == null || trainClasses.isEmpty()) {
             return availablePerClass;
@@ -122,7 +135,7 @@ public class BookingService {
             }
         }
         
-        // Calculate available seats for each class
+        // Calc
         for (java.util.Map.Entry<String, Integer> entry : trainClasses.entrySet()) {
             String className = entry.getKey();
             Integer totalCapacity = entry.getValue();
@@ -148,25 +161,14 @@ public class BookingService {
     }
     private BigDecimal calculateFare(Schedule schedule, String ticketClass) {
         if (ticketClass == null || ticketClass.isEmpty()) {
-            return BigDecimal.valueOf(25.00); // Default fare
+            return BigDecimal.valueOf(25.00);
         }
         
-        // Get pricing from schedule
         java.util.Map<String, BigDecimal> pricing = schedule.getPricing();
         if (pricing != null && pricing.containsKey(ticketClass)) {
             return pricing.get(ticketClass);
         }
-        
-        // Fallback to default pricing based on class
-        switch (ticketClass.toLowerCase()) {
-            case "first class":
-                return BigDecimal.valueOf(1500.00);
-            case "second class":
-                return BigDecimal.valueOf(1000.00);
-            case "third class":
-                return BigDecimal.valueOf(500.00);
-            default:
-                return BigDecimal.valueOf(25.00);
-        }
+
+        return null;
     }
 } 

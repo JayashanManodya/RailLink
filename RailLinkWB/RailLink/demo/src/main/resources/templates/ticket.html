@@ -145,8 +145,20 @@
                                 </span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-sm font-medium" style="color: #848484;">Passengers:</span>
-                                <span class="text-sm font-semibold" style="color: #FFFFFF;" th:text="${booking.passengerCount}">2</span>
+                                <span class="text-sm font-medium" style="color: #848484;">Passenger:</span>
+                                <span class="text-sm font-semibold" style="color: #FFFFFF;" th:text="${booking.user.username}">John Doe</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium" style="color: #848484;">Seat Number:</span>
+                                <span class="text-sm font-semibold" style="color: #FFFFFF;" th:text="${booking.seatNumber}">A12</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium" style="color: #848484;">Ticket Class:</span>
+                                <span class="text-sm font-semibold" style="color: #FFFFFF;" th:text="${booking.ticketClass != null ? booking.ticketClass : 'Standard'}">First Class</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium" style="color: #848484;">Fare:</span>
+                                <span class="text-sm font-semibold" style="color: #FFFFFF;" th:text="${booking.fare != null ? '$' + booking.fare : '$0.00'}">$25.00</span>
                             </div>
                         </div>
                     </div>
@@ -163,8 +175,8 @@
                                 <span class="text-sm font-semibold" style="color: #FFFFFF;" th:text="${booking.schedule.route.name}">Central to North</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-sm font-medium" style="color: #848484;">Capacity:</span>
-                                <span class="text-sm font-semibold" style="color: #FFFFFF;" th:text="${booking.schedule.train.capacity}">150</span>
+                                <span class="text-sm font-medium" style="color: #848484;">Booking Date:</span>
+                                <span class="text-sm font-semibold" style="color: #FFFFFF;" th:text="${#temporals.format(booking.bookingDate, 'MMM dd, yyyy HH:mm')}">Dec 25, 2024 08:30</span>
                             </div>
                         </div>
                     </div>
@@ -187,7 +199,7 @@
                                 <i data-lucide="clock" class="h-6 w-6 mx-auto" style="color: #BDEB29;"></i>
                             </div>
                             <div class="text-sm font-medium mb-1" style="color: #848484;">Duration</div>
-                            <div class="text-lg font-semibold" style="color: #FFFFFF;" th:text="${booking.schedule.duration}">2h 30m</div>
+                            <div class="text-lg font-semibold" style="color: #FFFFFF;" th:text="${#temporals.format(booking.schedule.departureDate, 'HH:mm') + ' - ' + #temporals.format(booking.schedule.arrivalDate, 'HH:mm')}">08:30 - 11:00</div>
                         </div>
                         <div class="text-center">
                             <div class="p-3 rounded-lg mb-3" style="background-color: rgba(189, 235, 41, 0.1);">
@@ -196,6 +208,27 @@
                             <div class="text-sm font-medium mb-1" style="color: #848484;">Arrival</div>
                             <div class="text-lg font-semibold" style="color: #FFFFFF;" th:text="${#temporals.format(booking.schedule.arrivalDate, 'HH:mm')}">11:00</div>
                             <div class="text-sm" style="color: #848484;" th:text="${#temporals.format(booking.schedule.arrivalDate, 'MMM dd, yyyy')}">Dec 25, 2024</div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold mb-4" style="color: #FFFFFF;">Payment Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="text-center">
+                            <div class="p-3 rounded-lg mb-3" style="background-color: rgba(189, 235, 41, 0.1);">
+                                <i data-lucide="dollar-sign" class="h-6 w-6 mx-auto" style="color: #BDEB29;"></i>
+                            </div>
+                            <div class="text-sm font-medium mb-1" style="color: #848484;">Total Fare</div>
+                            <div class="text-lg font-semibold" style="color: #FFFFFF;" th:text="${booking.fare != null ? '$' + booking.fare : '$0.00'}">$25.00</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="p-3 rounded-lg mb-3" style="background-color: rgba(189, 235, 41, 0.1);">
+                                <i data-lucide="credit-card" class="h-6 w-6 mx-auto" style="color: #BDEB29;"></i>
+                            </div>
+                            <div class="text-sm font-medium mb-1" style="color: #848484;">Payment Status</div>
+                            <div class="text-lg font-semibold" style="color: #FFFFFF;">Paid</div>
                         </div>
                     </div>
                 </div>

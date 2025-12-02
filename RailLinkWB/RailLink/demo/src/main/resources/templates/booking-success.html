@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <title>Booking Confirmed - RailLink</title>
+    <title>RailLink - Booking Confirmed</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -16,37 +15,8 @@
         }
         
         .ticket-card {
-            background: linear-gradient(135deg, #1a1a1f 0%, #2d2d35 100%);
+            background-color: rgba(24, 24, 29, 0.8);
             border: 2px solid #BDEB29;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .ticket-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #BDEB29, #8CA43F, #BDEB29);
-        }
-        
-        .ticket-header {
-            background: linear-gradient(135deg, #BDEB29, #8CA43F);
-            color: #030304;
-            border-radius: 18px 18px 0 0;
-        }
-        
-        .ticket-body {
-            background: linear-gradient(135deg, #1a1a1f 0%, #2d2d35 100%);
-        }
-        
-        .ticket-footer {
-            background: linear-gradient(135deg, #2d2d35 0%, #1a1a1f 100%);
-            border-radius: 0 0 18px 18px;
         }
         
         .btn-primary {
@@ -72,252 +42,211 @@
             color: #FFFFFF;
         }
         
-        .btn-print {
-            background-color: #3b82f6;
-            color: #FFFFFF;
-            transition: all 0.3s ease;
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
         }
         
-        .btn-print:hover {
-            background-color: #2563eb;
+        .status-confirmed {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
         }
         
-        .ticket-qr {
-            background: #FFFFFF;
-            border-radius: 8px;
-            padding: 8px;
-            display: inline-block;
+        .status-cancelled {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
         }
         
-        .ticket-dashed-line {
-            border-top: 2px dashed #BDEB29;
-            margin: 20px 0;
-        }
-        
-        @media print {
-            * {
-                -webkit-print-color-adjust: exact !important;
-                color-adjust: exact !important;
-            }
-            
-            body {
-                background: white !important;
-                color: black !important;
-                margin: 0 !important;
-                padding: 20px !important;
-            }
-            
-            .ticket-card {
-                background: white !important;
-                border: 2px solid black !important;
-                box-shadow: none !important;
-                page-break-inside: avoid !important;
-                margin: 0 !important;
-                max-width: none !important;
-            }
-            
-            .ticket-header {
-                background: #f0f0f0 !important;
-                color: black !important;
-                -webkit-print-color-adjust: exact !important;
-            }
-            
-            .ticket-body {
-                background: white !important;
-                color: black !important;
-            }
-            
-            .ticket-footer {
-                background: #f0f0f0 !important;
-                color: black !important;
-                -webkit-print-color-adjust: exact !important;
-            }
-            
-            .no-print {
-                display: none !important;
-            }
-            
-            .btn-primary, .btn-secondary, .btn-print {
-                display: none !important;
-            }
-            
-            /* Ensure text is visible */
-            h1, h2, h3, p, span, div {
-                color: black !important;
-            }
-            
-            /* Print-specific styles */
-            @page {
-                margin: 0.5in;
-                size: A4;
-            }
+        .status-pending {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.2);
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-4xl">
-        
-        <div class="text-center mb-8 no-print">
-            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full mb-4" style="background-color: rgba(34, 197, 94, 0.1); border: 2px solid #22c55e;">
-                <i data-lucide="check-circle" class="h-10 w-10" style="color: #22c55e;"></i>
+<body>
+    
+    <header style="background-color: rgba(24, 24, 29, 0.9);" class="fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                
+                <a href="/" class="flex items-center space-x-2 text-xl font-bold" style="color: #FFFFFF;">
+                    <i data-lucide="train-front" class="h-6 w-6" style="color: #BDEB29;"></i>
+                    <span>RailLink</span>
+                </a>
+                
+                
+                <nav class="hidden md:flex space-x-8">
+                    <a href="/" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Home</a>
+                    <a href="/dashboard" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Dashboard</a>
+                    <a href="/search-trains" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Search Trains</a>
+                    <a href="/help" class="transition duration-150" style="color: #848484;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#848484'">Help</a>
+                </nav>
+                
+                
+                <div class="flex items-center space-x-4">
+                    <a href="/dashboard" sec:authorize="isAuthenticated()" class="flex items-center space-x-2 px-3 py-2 rounded-lg font-semibold transition duration-150" style="background-color: rgba(189, 235, 41, 0.1); border: 1px solid #BDEB29; color: #BDEB29;" onmouseover="this.style.backgroundColor='rgba(189, 235, 41, 0.2)'; this.style.color='#FFFFFF'" onmouseout="this.style.backgroundColor='rgba(189, 235, 41, 0.1)'; this.style.color='#BDEB29'">
+                        <i data-lucide="user-circle" class="h-5 w-5"></i>
+                        <span class="text-sm font-medium" th:text="${#authentication.name}">Username</span>
+                    </a>
+                    <form th:action="@{/logout}" method="post" class="inline">
+                        <button type="submit" class="px-4 py-2 rounded-lg font-semibold transition duration-150" style="background-color: #BDEB29; color: #030304;" onmouseover="this.style.backgroundColor='#8CA43F'; this.style.color='#FFFFFF'" onmouseout="this.style.backgroundColor='#BDEB29'; this.style.color='#030304'" onclick="return confirm('Are you sure you want to logout?');">
+                            <i data-lucide="log-out" class="inline h-4 w-4 mr-2"></i>
+                            Logout
+                        </button>
+                    </form>
+                </div>
             </div>
-            <h1 class="text-3xl font-bold mb-2" style="color: #FFFFFF;">Booking Confirmed!</h1>
-            <p class="text-lg" style="color: #848484;">Your train ticket has been successfully booked</p>
         </div>
+    </header>
 
-        
-        <div class="ticket-card" id="ticket">
+    
+    <div class="pt-20 min-h-screen" style="background-color: #030304;">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             
-            <div class="ticket-header p-6">
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-3">
-                        <i data-lucide="train-front" class="h-8 w-8"></i>
-                        <div>
-                            <h1 class="text-2xl font-bold">RailLink</h1>
-                            <p class="text-sm opacity-80">Digital Train Ticket</p>
+            <div class="ticket-card p-8 rounded-xl">
+                
+                <div class="text-center border-b-2 pb-6 mb-8" style="border-color: #BDEB29;">
+                    <div class="flex justify-center mb-4">
+                        <div class="p-3 rounded-full" style="background-color: rgba(189, 235, 41, 0.1);">
+                            <i data-lucide="ticket" class="h-8 w-8" style="color: #BDEB29;"></i>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <div class="text-sm opacity-80">Booking ID</div>
-                        <div class="text-xl font-bold" th:text="'#' + ${booking.id}">#12345</div>
+                    <h1 class="text-3xl font-bold mb-2" style="color: #BDEB29;">RailLink Ticket</h1>
+                    <p class="text-lg" style="color: #848484;">Your train journey details</p>
+                </div>
+
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4" style="color: #FFFFFF;">Booking Details</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium" style="color: #848484;">Booking ID:</span>
+                                <span class="text-sm font-semibold" style="color: #FFFFFF;" th:text="${booking.id}">#12345</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium" style="color: #848484;">Status:</span>
+                                <span class="status-badge status-confirmed" th:if="${booking.status == 'CONFIRMED'}">
+                                    <i data-lucide="check-circle" class="inline h-3 w-3 mr-1"></i>
+                                    Confirmed
+                                </span>
+                                <span class="status-badge status-cancelled" th:if="${booking.status == 'CANCELLED'}">
+                                    <i data-lucide="x-circle" class="inline h-3 w-3 mr-1"></i>
+                                    Cancelled
+                                </span>
+                                <span class="status-badge status-pending" th:if="${booking.status == 'PENDING'}">
+                                    <i data-lucide="clock" class="inline h-3 w-3 mr-1"></i>
+                                    Pending
+                                </span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium" style="color: #848484;">Passenger:</span>
+                                <span class="text-sm font-semibold" style="color: #FFFFFF;" th:text="${booking.user.username}">John Doe</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium" style="color: #848484;">Seat Number:</span>
+                                <span class="text-sm font-semibold" style="color: #FFFFFF;" th:text="${booking.seatNumber}">A12</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium" style="color: #848484;">Ticket Class:</span>
+                                <span class="text-sm font-semibold" style="color: #FFFFFF;" th:text="${booking.ticketClass != null ? booking.ticketClass : 'Standard'}">First Class</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium" style="color: #848484;">Fare:</span>
+                                <span class="text-sm font-semibold" style="color: #FFFFFF;" th:text="${booking.fare != null ? '$' + booking.fare : '$0.00'}">$25.00</span>
+                    </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4" style="color: #FFFFFF;">Train Information</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium" style="color: #848484;">Train:</span>
+                                <span class="text-sm font-semibold" style="color: #FFFFFF;" th:text="${booking.schedule.train.name}">Express 101</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium" style="color: #848484;">Route:</span>
+                                <span class="text-sm font-semibold" style="color: #FFFFFF;" th:text="${booking.schedule.route.name}">Central to North</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium" style="color: #848484;">Booking Date:</span>
+                                <span class="text-sm font-semibold" style="color: #FFFFFF;" th:text="${#temporals.format(booking.bookingDate, 'MMM dd, yyyy HH:mm')}">Dec 25, 2024 08:30</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold mb-4" style="color: #FFFFFF;">Journey Details</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="text-center">
+                            <div class="p-3 rounded-lg mb-3" style="background-color: rgba(189, 235, 41, 0.1);">
+                                <i data-lucide="map-pin" class="h-6 w-6 mx-auto" style="color: #BDEB29;"></i>
+                            </div>
+                            <div class="text-sm font-medium mb-1" style="color: #848484;">Departure</div>
+                            <div class="text-lg font-semibold" style="color: #FFFFFF;" th:text="${#temporals.format(booking.schedule.departureDate, 'HH:mm')}">08:30</div>
+                            <div class="text-sm" style="color: #848484;" th:text="${#temporals.format(booking.schedule.departureDate, 'MMM dd, yyyy')}">Dec 25, 2024</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="p-3 rounded-lg mb-3" style="background-color: rgba(189, 235, 41, 0.1);">
+                                <i data-lucide="clock" class="h-6 w-6 mx-auto" style="color: #BDEB29;"></i>
+                            </div>
+                            <div class="text-sm font-medium mb-1" style="color: #848484;">Duration</div>
+                            <div class="text-lg font-semibold" style="color: #FFFFFF;" th:text="${#temporals.format(booking.schedule.departureDate, 'HH:mm') + ' - ' + #temporals.format(booking.schedule.arrivalDate, 'HH:mm')}">08:30 - 11:00</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="p-3 rounded-lg mb-3" style="background-color: rgba(189, 235, 41, 0.1);">
+                                <i data-lucide="map-pin" class="h-6 w-6 mx-auto" style="color: #BDEB29;"></i>
+                            </div>
+                            <div class="text-sm font-medium mb-1" style="color: #848484;">Arrival</div>
+                            <div class="text-lg font-semibold" style="color: #FFFFFF;" th:text="${#temporals.format(booking.schedule.arrivalDate, 'HH:mm')}">11:00</div>
+                            <div class="text-sm" style="color: #848484;" th:text="${#temporals.format(booking.schedule.arrivalDate, 'MMM dd, yyyy')}">Dec 25, 2024</div>
+                        </div>
+                        </div>
+                    </div>
+
+                    
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold mb-4" style="color: #FFFFFF;">Payment Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="text-center">
+                            <div class="p-3 rounded-lg mb-3" style="background-color: rgba(189, 235, 41, 0.1);">
+                                <i data-lucide="dollar-sign" class="h-6 w-6 mx-auto" style="color: #BDEB29;"></i>
+                            </div>
+                            <div class="text-sm font-medium mb-1" style="color: #848484;">Total Fare</div>
+                            <div class="text-lg font-semibold" style="color: #FFFFFF;" th:text="${booking.fare != null ? '$' + booking.fare : '$0.00'}">$25.00</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="p-3 rounded-lg mb-3" style="background-color: rgba(189, 235, 41, 0.1);">
+                                <i data-lucide="credit-card" class="h-6 w-6 mx-auto" style="color: #BDEB29;"></i>
+                            </div>
+                            <div class="text-sm font-medium mb-1" style="color: #848484;">Payment Status</div>
+                            <div class="text-lg font-semibold" style="color: #FFFFFF;">Paid</div>
                     </div>
                 </div>
             </div>
 
             
-            <div class="ticket-body p-6">
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    
-                    <div class="text-center">
-                        <div class="text-sm opacity-70 mb-2">FROM</div>
-                        <div class="text-lg font-semibold" th:text="${#strings.substring(booking.schedule.route.name, 0, #strings.indexOf(booking.schedule.route.name, ' to '))}">Colombo Fort</div>
-                        <div class="text-sm opacity-70" th:text="${#temporals.format(booking.schedule.departureDate, 'MMM dd, yyyy')}">Dec 15, 2024</div>
-                        <div class="text-lg font-bold" th:text="${#temporals.format(booking.schedule.departureDate, 'HH:mm')}">08:30</div>
-                    </div>
-
-                    
-                    <div class="flex items-center justify-center">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-8 h-0.5 bg-current opacity-50"></div>
-                            <i data-lucide="train" class="h-6 w-6"></i>
-                            <div class="w-8 h-0.5 bg-current opacity-50"></div>
-                        </div>
-                    </div>
-
-                    
-                    <div class="text-center">
-                        <div class="text-sm opacity-70 mb-2">TO</div>
-                        <div class="text-lg font-semibold" th:text="${#strings.substring(booking.schedule.route.name, #strings.indexOf(booking.schedule.route.name, ' to ') + 4)}">Kandy</div>
-                        <div class="text-sm opacity-70" th:text="${#temporals.format(booking.schedule.arrivalDate, 'MMM dd, yyyy')}">Dec 15, 2024</div>
-                        <div class="text-lg font-bold" th:text="${#temporals.format(booking.schedule.arrivalDate, 'HH:mm')}">11:00</div>
-                    </div>
-                </div>
-
-                
-                <div class="ticket-dashed-line"></div>
-
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <div class="text-sm opacity-70 mb-1">PASSENGER</div>
-                            <div class="text-lg font-semibold" th:text="${booking.user.username}">John Doe</div>
-                        </div>
-                        <div>
-                            <div class="text-sm opacity-70 mb-1">TICKET CLASS</div>
-                            <div class="text-lg font-semibold" th:text="${ticketClass != null ? ticketClass : 'Standard'}">
-                                <i data-lucide="star" class="inline h-4 w-4 mr-1"></i>
-                                <span>First Class</span>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="text-sm opacity-70 mb-1">NUMBER OF TICKETS</div>
-                            <div class="text-lg font-semibold">
-                                <i data-lucide="ticket" class="inline h-4 w-4 mr-1"></i>
-                                <span th:text="${ticketCount != null ? ticketCount : 1} + ' ticket(s)'">1 ticket(s)</span>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="text-sm opacity-70 mb-1">SEAT NUMBER(S)</div>
-                            <div class="text-lg font-semibold">
-                                <i data-lucide="armchair" class="inline h-4 w-4 mr-1"></i>
-                                <span th:text="${seatNumbers != null ? #strings.listJoin(seatNumbers, ', ') : booking.seatNumber}">A12</span>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="text-sm opacity-70 mb-1">TRAIN</div>
-                            <div class="text-lg font-semibold" th:text="${booking.schedule.train.name}">Express Train</div>
-                        </div>
-                    </div>
-
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <div class="text-sm opacity-70 mb-1">STATUS</div>
-                            <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold" 
-                                 style="background-color: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid #22c55e;"
-                                 th:text="${booking.status}">CONFIRMED</div>
-                        </div>
-                        <div>
-                            <div class="text-sm opacity-70 mb-1">PRICE PER TICKET</div>
-                            <div class="text-lg font-semibold">
-                                Rs. <span th:text="${booking.fare != null ? #numbers.formatDecimal(booking.fare, 0, 2) : '0.00'}">25.00</span>
-                            </div>
-                        </div>
-                        <div th:if="${ticketCount != null and ticketCount > 1}" class="p-3 rounded-lg" style="background-color: rgba(189, 235, 41, 0.1); border: 2px solid #BDEB29;">
-                            <div class="text-sm opacity-70 mb-1">TOTAL FARE</div>
-                            <div class="text-2xl font-bold" style="color: #BDEB29;">
-                                Rs. <span th:text="${totalFare != null ? #numbers.formatDecimal(totalFare, 0, 2) : '0.00'}">75.00</span>
-                            </div>
-                            <div class="text-xs opacity-70 mt-1">
-                                <span th:text="${ticketCount} + ' × Rs. ' + ${#numbers.formatDecimal(booking.fare, 0, 2)}">3 × Rs. 25.00</span>
-                            </div>
-                        </div>
-                        <div th:if="${ticketCount == null or ticketCount == 1}">
-                            <div class="text-sm opacity-70 mb-1">TOTAL FARE</div>
-                            <div class="text-2xl font-bold" style="color: #BDEB29;">
-                                Rs. <span th:text="${booking.fare != null ? #numbers.formatDecimal(booking.fare, 0, 2) : '0.00'}">25.00</span>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="text-sm opacity-70 mb-1">BOOKING DATE</div>
-                            <div class="text-lg font-semibold" th:text="${#temporals.format(booking.bookingDate, 'MMM dd, yyyy HH:mm')}">Dec 14, 2024 15:30</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            
-            <div class="ticket-footer p-6">
-            </div>
-        </div>
-
-        
-        <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8 no-print">
-            <button onclick="downloadPDF()" class="btn-primary px-8 py-3 rounded-lg font-semibold inline-flex items-center justify-center">
-                <i data-lucide="download" class="h-4 w-4 mr-2"></i>
-                Download PDF (Client)
-            </button>
-            <a href="/search-trains" class="btn-secondary px-8 py-3 rounded-lg font-semibold inline-flex items-center justify-center">
-                <i data-lucide="search" class="h-4 w-4 mr-2"></i>
-                Book Another Ticket
-            </a>
-        </div>
-
-
-        
-        <div class="mt-4 p-4 rounded-lg no-print" style="background-color: rgba(255, 255, 0, 0.1); border: 1px solid #ffd700; display: none;" id="debugInfo">
-            <div class="flex items-start gap-3">
-                <i data-lucide="bug" class="h-5 w-5 mt-0.5" style="color: #ffd700;"></i>
-                <div>
-                    <p class="text-sm font-semibold mb-1" style="color: #ffd700;">Debug Information:</p>
-                    <div class="text-xs space-y-1" style="color: #848484;">
-                        <p><strong>jsPDF Library:</strong> <span id="jspdfStatus">Checking...</span></p>
-                        <p><strong>Booking Data:</strong> <span id="bookingDataStatus">Loading...</span></p>
-                        <p><strong>Print Function:</strong> <span id="printStatus">Ready</span></p>
-                    </div>
+                <div class="flex gap-4 justify-center">
+                    <button onclick="window.print()" class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                        <i data-lucide="printer" class="h-4 w-4 mr-2"></i>
+                        Print Ticket
+                    </button>
+                    <a href="/my-bookings" class="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                        <i data-lucide="list" class="h-4 w-4 mr-2"></i>
+                        My Bookings
+                    </a>
+                    <a href="/search-trains" class="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center">
+                        <i data-lucide="search" class="h-4 w-4 mr-2"></i>
+                        Book Another
+                    </a>
                 </div>
             </div>
         </div>
@@ -326,98 +255,6 @@
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
-
-        // Booking data for JavaScript
-        const bookingData = {
-            id: /*[[${booking.id}]]*/ '12345',
-            username: /*[[${booking.user.username}]]*/ 'john_doe',
-            trainName: /*[[${booking.schedule.train.name}]]*/ 'Express Train',
-            routeName: /*[[${booking.schedule.route.name}]]*/ 'Colombo to Kandy',
-            seatNumber: /*[[${booking.seatNumber}]]*/ 'A12',
-            departureDate: /*[[${#temporals.format(booking.schedule.departureDate, 'MMM dd, yyyy HH:mm')}]]*/ 'Dec 25, 2024 08:30',
-            arrivalDate: /*[[${#temporals.format(booking.schedule.arrivalDate, 'MMM dd, yyyy HH:mm')}]]*/ 'Dec 25, 2024 11:00',
-            fare: /*[[${booking.fare}]]*/ '25.00',
-            status: /*[[${booking.status}]]*/ 'CONFIRMED'
-        };
-
-        // Print ticket function
-        function printTicket() {
-            console.log('Print ticket function called');
-            window.print();
-        }
-
-        // Download PDF function
-        function downloadPDF() {
-            console.log('Download PDF function called');
-            console.log('Booking data:', bookingData);
-            
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                
-                // Add title
-                doc.setFontSize(20);
-                doc.text('RailLink Train Ticket', 20, 20);
-                
-                // Add booking details
-                doc.setFontSize(12);
-                doc.text('Booking ID: #' + bookingData.id, 20, 40);
-                doc.text('Passenger: ' + bookingData.username, 20, 50);
-                doc.text('Train: ' + bookingData.trainName, 20, 60);
-                doc.text('Route: ' + bookingData.routeName, 20, 70);
-                doc.text('Seat: ' + bookingData.seatNumber, 20, 80);
-                doc.text('Departure: ' + bookingData.departureDate, 20, 90);
-                doc.text('Arrival: ' + bookingData.arrivalDate, 20, 100);
-                doc.text('Fare: $' + bookingData.fare, 20, 110);
-                doc.text('Status: ' + bookingData.status, 20, 120);
-                
-                // Add footer
-                doc.setFontSize(10);
-                doc.text('Valid for this journey only. Please arrive 15 minutes early.', 20, 140);
-                doc.text('Generated on: ' + new Date().toLocaleString(), 20, 150);
-                
-                // Save the PDF
-                doc.save('ticket-' + bookingData.id + '.pdf');
-                console.log('PDF generated successfully');
-            } catch (error) {
-                console.error('Error generating PDF:', error);
-                alert('Error generating PDF. Please try again.');
-            }
-        }
-
-        // Test if jsPDF is loaded and update debug info
-        window.addEventListener('load', function() {
-            // Update debug information
-            const jspdfStatus = document.getElementById('jspdfStatus');
-            const bookingDataStatus = document.getElementById('bookingDataStatus');
-            
-            if (typeof window.jspdf === 'undefined') {
-                console.error('jsPDF library not loaded');
-                if (jspdfStatus) jspdfStatus.textContent = 'Not loaded';
-                if (jspdfStatus) jspdfStatus.style.color = '#ef4444';
-            } else {
-                console.log('jsPDF library loaded successfully');
-                if (jspdfStatus) jspdfStatus.textContent = 'Loaded successfully';
-                if (jspdfStatus) jspdfStatus.style.color = '#22c55e';
-            }
-            
-            // Check booking data
-            if (bookingData && bookingData.id) {
-                if (bookingDataStatus) bookingDataStatus.textContent = 'Loaded successfully';
-                if (bookingDataStatus) bookingDataStatus.style.color = '#22c55e';
-            } else {
-                if (bookingDataStatus) bookingDataStatus.textContent = 'Failed to load';
-                if (bookingDataStatus) bookingDataStatus.style.color = '#ef4444';
-            }
-            
-            // Show debug info if there are any issues
-            if (typeof window.jspdf === 'undefined' || !bookingData || !bookingData.id) {
-                const debugInfo = document.getElementById('debugInfo');
-                if (debugInfo) debugInfo.style.display = 'block';
-            }
-        });
     </script>
 </body>
 </html>
-
-
